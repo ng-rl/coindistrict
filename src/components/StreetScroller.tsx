@@ -33,25 +33,25 @@ function computeBuildingHeight(
 export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   const streetRef = useRef<HTMLDivElement>(null);
   
-  const { streetPlots } = useMemo(() => {
+  const { streetPlots, totalStreetWidth } = useMemo(() => {
     const coinPlots = plots.filter(isCoinPlot);
     if (coinPlots.length === 0) return { 
-      streetMinVolume: 1, 
-      streetMaxVolume: 1000000000,
       streetPlots: [] as StreetPlot[],
+      totalStreetWidth: 0,
     };
     
     const volumes = coinPlots.map(c => c.volume24h);
     const minVol = Math.min(...volumes);
     const maxVol = Math.max(...volumes);
     
-    let worldX = 0;
+    let accumulatedX = 0;
     const streetPlots: StreetPlot[] = plots.map((plot) => {
       const isAd = !isCoinPlot(plot);
       const width = isAd ? AD_WIDTH : PLOT_WIDTH;
       
-      const centerX = worldX + width / 2;
-      worldX += width + PLOT_GAP;
+      // Center of this plot in DOM pixels
+      const centerX = accumulatedX + width / 2;
+      accumulatedX += width + PLOT_GAP;
       
       const height = isAd 
         ? 1.6 
@@ -64,31 +64,28 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
         isAd,
         seed: isCoinPlot(plot) ? plot.ticker : 'AD',
         ticker: undefined, // DOM HUD outside Canvas
-        x: (centerX - PLOT_WIDTH / 2) / 30, // Scale to world units
+        x: centerX / 30, // Scale DOM pixels to world units for StreetScene
       };
     });
     
+    // Total width = all plots + gaps between them
+    const totalWidth = plots.reduce((sum, plot) => {
+      const isAd = !isCoinPlot(plot);
+      return sum + (isAd ? AD_WIDTH : PLOT_WIDTH);
+    }, 0) + (plots.length - 1) * PLOT_GAP;
+    
     return {
       streetPlots,
+      totalStreetWidth: totalWidth,
     };
   }, [plots]);
   
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-end relative">
-      {/* WebGL Street Canvas - positioned absolutely behind DOM */}
-      <div 
-        className="absolute bottom-12 left-0 right-0 pointer-events-none"
-        style={{
-          height: '420px',
-        }}
-      >
-        <StreetScene plots={streetPlots} />
-      </div>
-      
-      {/* Scrollable DOM overlay for interaction + metadata */}
+      {/* Scrollable container with StreetScene INSIDE */}
       <div
         ref={streetRef}
-        className="overflow-x-auto overflow-y-hidden scrollbar-hide relative z-10"
+        className="overflow-x-auto overflow-y-hidden scrollbar-hide relative"
         style={{
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
@@ -97,72 +94,92 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
           paddingRight: '20px',
         }}
       >
+        {/* Scrollable content wrapper */}
         <div
-          className="inline-flex items-end"
+          className="relative"
           style={{
             minWidth: 'max-content',
-            gap: `${PLOT_GAP}px`,
+            height: '420px',
           }}
         >
-          {plots.map((plot) => {
-            const isAd = !isCoinPlot(plot);
-            const width = isAd ? AD_WIDTH : PLOT_WIDTH;
-            
-            return (
-              <button
-                key={plot.id}
-                onClick={() => onPlotClick(plot)}
-                className="plot-wrapper relative cursor-pointer group"
-                style={{ 
-                  width: `${width}px`,
-                  scrollSnapAlign: 'center',
-                  scrollSnapStop: 'normal',
-                  minHeight: '420px',
-                }}
-                aria-label={isCoinPlot(plot) ? `${plot.name} plot` : `${plot.advertiser} advertisement`}
-              >
-                {/* Ticker badge */}
-                <div
-                  className={`ticker-badge absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-2 border-cd-bg rounded-full font-mono font-bold text-[11px] z-20 ${
-                    isAd ? 'bg-cd-ad' : 'bg-cd-mint'
-                  }`}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    top: '-18px',
-                    color: isAd ? '#1A1408' : '#0B0B0C',
+          {/* StreetScene Canvas layer - scrolls with content */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              width: `${totalStreetWidth}px`,
+              height: '420px',
+            }}
+          >
+            <StreetScene plots={streetPlots} />
+          </div>
+          
+          {/* DOM badges/meta overlay - scrolls with Canvas */}
+          <div
+            className="relative inline-flex items-end z-10"
+            style={{
+              gap: `${PLOT_GAP}px`,
+            }}
+          >
+            {plots.map((plot) => {
+              const isAd = !isCoinPlot(plot);
+              const width = isAd ? AD_WIDTH : PLOT_WIDTH;
+              
+              return (
+                <button
+                  key={plot.id}
+                  onClick={() => onPlotClick(plot)}
+                  className="plot-wrapper relative cursor-pointer group"
+                  style={{ 
+                    width: `${width}px`,
+                    scrollSnapAlign: 'center',
+                    scrollSnapStop: 'normal',
+                    minHeight: '420px',
                   }}
+                  aria-label={isCoinPlot(plot) ? `${plot.name} plot` : `${plot.advertiser} advertisement`}
                 >
-                  {isAd ? 'AD' : isCoinPlot(plot) ? plot.ticker.slice(0, 3) : ''}
-                </div>
-                
-                {/* Meta */}
-                <div className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-3">
-                  <div className={`text-xs font-medium truncate px-1 ${
-                    isAd ? 'text-cd-ad' : 'text-cd-text'
-                  }`}>
-                    {isAd ? 'Sponsor' : isCoinPlot(plot) ? plot.name : ''}
+                  {/* Ticker badge */}
+                  <div
+                    className={`ticker-badge absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-2 border-cd-bg rounded-full font-mono font-bold text-[11px] z-20 ${
+                      isAd ? 'bg-cd-ad' : 'bg-cd-mint'
+                    }`}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      top: '-18px',
+                      color: isAd ? '#1A1408' : '#0B0B0C',
+                    }}
+                  >
+                    {isAd ? 'AD' : isCoinPlot(plot) ? plot.ticker.slice(0, 3) : ''}
                   </div>
-                  <div className="text-[10px] text-cd-muted">
-                    {isAd ? 'Ad · Every 7' : isCoinPlot(plot) ? `$${(plot.marketCap / 1000000000).toFixed(1)}B` : ''}
-                  </div>
-                  <div className="flex justify-center">
-                    <div
-                      className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider ${
-                        isAd 
-                          ? 'bg-cd-ad/10 text-cd-ad border border-cd-ad/30'
-                          : isCoinPlot(plot) && plot.rentStatus === 'PAID'
-                            ? 'bg-cd-mint/10 text-cd-mint border border-cd-mint/30'
-                            : 'bg-cd-due/10 text-cd-due border border-cd-due/30'
-                      }`}
-                    >
-                      {isAd ? 'AD' : isCoinPlot(plot) ? plot.rentStatus : 'PAID'}
+                  
+                  {/* Meta */}
+                  <div className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-3">
+                    <div className={`text-xs font-medium truncate px-1 ${
+                      isAd ? 'text-cd-ad' : 'text-cd-text'
+                    }`}>
+                      {isAd ? 'Sponsor' : isCoinPlot(plot) ? plot.name : ''}
+                    </div>
+                    <div className="text-[10px] text-cd-muted">
+                      {isAd ? 'Ad · Every 7' : isCoinPlot(plot) ? `$${(plot.marketCap / 1000000000).toFixed(1)}B` : ''}
+                    </div>
+                    <div className="flex justify-center">
+                      <div
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider ${
+                          isAd 
+                            ? 'bg-cd-ad/10 text-cd-ad border border-cd-ad/30'
+                            : isCoinPlot(plot) && plot.rentStatus === 'PAID'
+                              ? 'bg-cd-mint/10 text-cd-mint border border-cd-mint/30'
+                              : 'bg-cd-due/10 text-cd-due border border-cd-due/30'
+                        }`}
+                      >
+                        {isAd ? 'AD' : isCoinPlot(plot) ? plot.rentStatus : 'PAID'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
       
