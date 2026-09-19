@@ -7,7 +7,7 @@ interface BuildingPlotProps {
     building1: THREE.Material;
     building2: THREE.Material;
     building3: THREE.Material;
-    windows: THREE.Material;
+    windowPane: THREE.Material;
     road: THREE.Material;
     sidewalk: THREE.Material;
     streetlight: THREE.Material;
@@ -22,18 +22,20 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
   const building1Ref = useRef<THREE.InstancedMesh>(null);
   const building2Ref = useRef<THREE.InstancedMesh>(null);
   const building3Ref = useRef<THREE.InstancedMesh>(null);
-  const windowsRef = useRef<THREE.InstancedMesh>(null);
+  const windowPanesRef = useRef<THREE.InstancedMesh>(null);
   const roadRef = useRef<THREE.InstancedMesh>(null);
   const streetlightRef = useRef<THREE.InstancedMesh>(null);
+  const streetlightPoleRef = useRef<THREE.InstancedMesh>(null);
 
   const buildingData = useMemo(() => {
     const data = {
       buildings1: [] as Array<{ pos: [number, number, number]; scale: [number, number, number] }>,
       buildings2: [] as Array<{ pos: [number, number, number]; scale: [number, number, number] }>,
       buildings3: [] as Array<{ pos: [number, number, number]; scale: [number, number, number] }>,
-      windows: [] as Array<{ pos: [number, number, number]; scale: [number, number, number] }>,
+      windowPanes: [] as Array<{ pos: [number, number, number]; scale: [number, number, number] }>,
       roads: [] as Array<{ pos: [number, number, number] }>,
       streetlights: [] as Array<{ pos: [number, number, number] }>,
+      streetlightPoles: [] as Array<{ pos: [number, number, number] }>,
     };
 
     const gridSizeX = 16;
@@ -44,14 +46,14 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
     for (let z = 0; z < gridSizeZ; z++) {
       let x = startX;
       for (let i = 0; i < gridSizeX; i++) {
-        if (Math.random() > 0.2) {
-          const height = 30 + Math.random() * 120;
-          const width = 15 + Math.random() * 15;
-          const depth = 15 + Math.random() * 15;
+        if (Math.random() > 0.15) {
+          const height = 40 + Math.random() * 140;
+          const width = 18 + Math.random() * 20;
+          const depth = 18 + Math.random() * 20;
           
           const posX = x;
           const posY = height / 2;
-          const posZ = startZ - z * 50;
+          const posZ = startZ - z * 55;
           
           const buildingType = Math.floor(Math.random() * 3);
           const targetArray = buildingType === 0 ? data.buildings1 
@@ -63,28 +65,49 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
             scale: [width, height, depth]
           });
 
-          const windowHeight = height * 0.85;
-          const windowScale = width * 0.9;
-          data.windows.push({
-            pos: [posX, posY + height * 0.05, posZ],
-            scale: [windowScale, windowHeight, depth + 0.5]
-          });
+          const floorsY = Math.floor(height / 4);
+          const windowsX = Math.floor(width / 3.5);
+          const windowsZ = Math.floor(depth / 3.5);
+          
+          for (let fy = 1; fy < floorsY; fy++) {
+            for (let wx = 0; wx < windowsX; wx++) {
+              for (let wz = 0; wz < windowsZ; wz++) {
+                if (Math.random() > 0.2) {
+                  const windowX = posX - width/2 + (wx + 0.5) * (width / windowsX);
+                  const windowY = posY - height/2 + (fy + 0.5) * (height / floorsY);
+                  const windowZ = posZ - depth/2 + (wz + 0.5) * (depth / windowsZ);
+                  
+                  data.windowPanes.push({
+                    pos: [windowX, windowY, windowZ],
+                    scale: [1.5, 2.5, 1.5]
+                  });
+                }
+              }
+            }
+          }
         }
         
-        x += 50 + Math.random() * 20;
+        x += 55 + Math.random() * 20;
       }
     }
 
     for (let i = 0; i < 20; i++) {
       data.roads.push({
-        pos: [0, 0, -50 - i * 50]
+        pos: [0, 0, -50 - i * 55]
+      });
+      
+      data.streetlightPoles.push({
+        pos: [-480, 8, -50 - i * 55]
+      });
+      data.streetlightPoles.push({
+        pos: [480, 8, -50 - i * 55]
       });
       
       data.streetlights.push({
-        pos: [-450, 3, -50 - i * 50]
+        pos: [-480, 16, -50 - i * 55]
       });
       data.streetlights.push({
-        pos: [450, 3, -50 - i * 50]
+        pos: [480, 16, -50 - i * 55]
       });
     }
 
@@ -124,20 +147,20 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
       building3Ref.current.instanceMatrix.needsUpdate = true;
     }
 
-    if (windowsRef.current) {
-      buildingData.windows.forEach((window, i) => {
-        dummy.position.set(...window.pos);
-        dummy.scale.set(...window.scale);
+    if (windowPanesRef.current) {
+      buildingData.windowPanes.forEach((pane, i) => {
+        dummy.position.set(...pane.pos);
+        dummy.scale.set(...pane.scale);
         dummy.updateMatrix();
-        windowsRef.current!.setMatrixAt(i, dummy.matrix);
+        windowPanesRef.current!.setMatrixAt(i, dummy.matrix);
       });
-      windowsRef.current.instanceMatrix.needsUpdate = true;
+      windowPanesRef.current.instanceMatrix.needsUpdate = true;
     }
 
     if (roadRef.current) {
       buildingData.roads.forEach((road, i) => {
         dummy.position.set(...road.pos);
-        dummy.scale.set(900, 50, 1);
+        dummy.scale.set(1000, 55, 1);
         dummy.rotation.set(-Math.PI / 2, 0, 0);
         dummy.updateMatrix();
         roadRef.current!.setMatrixAt(i, dummy.matrix);
@@ -145,10 +168,20 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
       roadRef.current.instanceMatrix.needsUpdate = true;
     }
 
+    if (streetlightPoleRef.current) {
+      buildingData.streetlightPoles.forEach((pole, i) => {
+        dummy.position.set(...pole.pos);
+        dummy.scale.set(1.5, 16, 1.5);
+        dummy.updateMatrix();
+        streetlightPoleRef.current!.setMatrixAt(i, dummy.matrix);
+      });
+      streetlightPoleRef.current.instanceMatrix.needsUpdate = true;
+    }
+
     if (streetlightRef.current) {
       buildingData.streetlights.forEach((light, i) => {
         dummy.position.set(...light.pos);
-        dummy.scale.set(2, 15, 2);
+        dummy.scale.set(4, 4, 4);
         dummy.updateMatrix();
         streetlightRef.current!.setMatrixAt(i, dummy.matrix);
       });
@@ -158,7 +191,7 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
 
   useFrame(({ camera }) => {
     if (groupRef.current && camera.position.z < groupRef.current.position.z - 400) {
-      groupRef.current.position.z -= 1000;
+      groupRef.current.position.z -= 1100;
     }
   });
 
@@ -183,8 +216,8 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
         receiveShadow
       />
       <instancedMesh
-        ref={windowsRef}
-        args={[materials.boxGeo, materials.windows, buildingData.windows.length]}
+        ref={windowPanesRef}
+        args={[materials.boxGeo, materials.windowPane, buildingData.windowPanes.length]}
       />
       <instancedMesh
         ref={roadRef}
@@ -192,9 +225,24 @@ export function BuildingPlot({ materials, position }: BuildingPlotProps) {
         receiveShadow
       />
       <instancedMesh
+        ref={streetlightPoleRef}
+        args={[materials.boxGeo, materials.sidewalk, buildingData.streetlightPoles.length]}
+      />
+      <instancedMesh
         ref={streetlightRef}
         args={[materials.boxGeo, materials.streetlight, buildingData.streetlights.length]}
       />
+      
+      {buildingData.streetlights.map((light, i) => (
+        <pointLight
+          key={i}
+          position={light.pos}
+          intensity={120}
+          distance={80}
+          color="#ffdd66"
+          castShadow={false}
+        />
+      ))}
     </group>
   );
 }
