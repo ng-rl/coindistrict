@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cd-bg: #0B0B0C;
+  --cd-surface: #141416;
+  --cd-line: #222226;
+  --cd-text: #F4F4F5;
+  --cd-muted: #8B8B93;
+  --cd-mint: #3DFF9A;
+  --cd-ad: #E8C36A;
+  --cd-due: #FF6B6B;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--cd-bg);
+  color: var(--cd-text);
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
