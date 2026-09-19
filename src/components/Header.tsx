@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export function Header({ onSearchClick, onShareClick }: HeaderProps) {
   return (
-    <header className="bg-cd-surface border-b border-cd-line px-4 py-3 flex items-center justify-between">
+    <header className="shrink-0 bg-cd-surface border-b border-cd-line px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <BrandMark />
         <h1 

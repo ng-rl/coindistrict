@@ -8,7 +8,7 @@ interface BuildingProps {
 }
 
 export function Building({ coin, index, onClick }: BuildingProps) {
-  const height = Math.max(72, Math.min(280, (coin.volume24h / 1000000000) * 15));
+  const height = Math.max(120, Math.min(360, (coin.volume24h / 1000000000) * 22));
   const isPaid = coin.rentStatus === 'PAID';
   
   const animationDelay = `${index * 120}ms`;
@@ -18,14 +18,14 @@ export function Building({ coin, index, onClick }: BuildingProps) {
       onClick={onClick}
       className="plot-wrapper relative cursor-pointer group"
       style={{
-        width: '108px',
+        width: '88px',
       }}
       aria-label={`${coin.name} plot`}
     >
       <div
         className="building-container relative mx-auto"
         style={{
-          width: '88px',
+          width: '72px',
           perspective: '1200px',
         }}
       >
@@ -44,7 +44,7 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           <div
             className="building-face-front absolute inset-0 overflow-hidden"
             style={{
-              transform: 'translateZ(22px)',
+              transform: 'translateZ(18px)',
               background: 'linear-gradient(180deg, #2A2A30 0%, #151518 100%)',
               border: '1px solid #333339',
               borderRadius: '2px',
@@ -55,10 +55,10 @@ export function Building({ coin, index, onClick }: BuildingProps) {
               className={`window-grid absolute inset-0 ${isPaid ? 'window-pulse' : ''}`}
               style={{
                 backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(61,255,154,0.12) 18px, rgba(61,255,154,0.12) 19px),
-                  repeating-linear-gradient(90deg, transparent, transparent 16px, rgba(61,255,154,0.12) 16px, rgba(61,255,154,0.12) 17px)
+                  repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(61,255,154,0.18) 18px, rgba(61,255,154,0.18) 19px),
+                  repeating-linear-gradient(90deg, transparent, transparent 16px, rgba(61,255,154,0.18) 16px, rgba(61,255,154,0.18) 17px)
                 `,
-                opacity: isPaid ? 0.6 : 0.25,
+                opacity: isPaid ? 0.85 : 0.25,
                 ...(isPaid && {
                   animation: 'windowPulse 2.4s ease-in-out infinite',
                   animationDelay,
@@ -69,11 +69,12 @@ export function Building({ coin, index, onClick }: BuildingProps) {
             {/* Rent pulse glow */}
             {isPaid && (
               <div
-                className="pulse-glow absolute inset-0 border border-cd-mint pointer-events-none"
+                className="pulse-glow absolute inset-0 border-2 border-cd-mint pointer-events-none"
                 style={{
                   animation: 'rentPulse 2.4s ease-in-out infinite',
                   animationDelay,
                   borderRadius: '2px',
+                  boxShadow: '0 0 8px rgba(61,255,154,0.4)',
                 }}
               />
             )}
@@ -94,10 +95,10 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           <div
             className="building-face-left absolute inset-0"
             style={{
-              transform: 'rotateY(-90deg) translateZ(22px)',
-              width: '44px',
-              background: 'linear-gradient(180deg, #1F1F24 0%, #0F0F11 100%)',
-              border: '1px solid #28282E',
+              transform: 'rotateY(-90deg) translateZ(18px)',
+              width: '36px',
+              background: 'linear-gradient(180deg, #2D2D33 0%, #1A1A1E 100%)',
+              border: '1px solid #3A3A40',
             }}
           />
           
@@ -105,10 +106,10 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           <div
             className="building-face-right absolute inset-0"
             style={{
-              transform: 'rotateY(90deg) translateZ(66px)',
-              width: '44px',
-              background: 'linear-gradient(180deg, #1A1A1E 0%, #0A0A0C 100%)',
-              border: '1px solid #202024',
+              transform: 'rotateY(90deg) translateZ(54px)',
+              width: '36px',
+              background: 'linear-gradient(180deg, #1A1A1E 0%, #0F0F11 100%)',
+              border: '1px solid #28282E',
             }}
           />
           
@@ -117,8 +118,8 @@ export function Building({ coin, index, onClick }: BuildingProps) {
             className="building-face-top absolute"
             style={{
               transform: 'rotateX(90deg) translateZ(0)',
-              width: '88px',
-              height: '44px',
+              width: '72px',
+              height: '36px',
               top: '0',
               background: '#2A2A30',
               border: '1px solid #333339',
