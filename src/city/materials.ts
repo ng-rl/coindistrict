@@ -24,7 +24,7 @@ function createWindowTexture(windowsX: number, windowsY: number, litProbability:
       ctx.fillRect(wx + 2, wy + 2, windowWidth - 4, windowHeight - 4);
       
       if (isLit) {
-        ctx.fillStyle = '#ffd966';
+        ctx.fillStyle = '#ffcc66';
         ctx.fillRect(wx + 4, wy + 4, windowWidth - 8, windowHeight - 8);
       } else {
         ctx.fillStyle = '#0a0a1a';
@@ -38,6 +38,7 @@ function createWindowTexture(windowsX: number, windowsY: number, litProbability:
   texture.wrapT = THREE.RepeatWrapping;
   texture.minFilter = THREE.NearestFilter;
   texture.magFilter = THREE.NearestFilter;
+  texture.repeat.set(1, 3);
   texture.needsUpdate = true;
   
   return texture;
@@ -75,27 +76,28 @@ function createWindowEmissiveMap(windowsX: number, windowsY: number, litProbabil
   texture.wrapT = THREE.RepeatWrapping;
   texture.minFilter = THREE.NearestFilter;
   texture.magFilter = THREE.NearestFilter;
+  texture.repeat.set(1, 3);
   texture.needsUpdate = true;
   
   return texture;
 }
 
 export function createBuildingMaterials() {
-  const windowTexture1 = createWindowTexture(4, 8, 0.85);
-  const windowEmissive1 = createWindowEmissiveMap(4, 8, 0.85);
+  const windowTexture1 = createWindowTexture(4, 6, 0.85);
+  const windowEmissive1 = createWindowEmissiveMap(4, 6, 0.85);
   
-  const windowTexture2 = createWindowTexture(5, 10, 0.75);
-  const windowEmissive2 = createWindowEmissiveMap(5, 10, 0.75);
+  const windowTexture2 = createWindowTexture(5, 8, 0.75);
+  const windowEmissive2 = createWindowEmissiveMap(5, 8, 0.75);
   
-  const windowTexture3 = createWindowTexture(3, 6, 0.9);
-  const windowEmissive3 = createWindowEmissiveMap(3, 6, 0.9);
+  const windowTexture3 = createWindowTexture(3, 5, 0.9);
+  const windowEmissive3 = createWindowEmissiveMap(3, 5, 0.9);
   
   const building1 = new THREE.MeshPhongMaterial({
     map: windowTexture1,
     emissiveMap: windowEmissive1,
-    emissive: new THREE.Color('#ffd966'),
-    emissiveIntensity: 1.2,
-    shininess: 100,
+    emissive: new THREE.Color('#ffcc66'),
+    emissiveIntensity: 1.4,
+    shininess: 80,
     side: THREE.FrontSide,
   });
   
@@ -103,17 +105,17 @@ export function createBuildingMaterials() {
     map: windowTexture2,
     emissiveMap: windowEmissive2,
     emissive: new THREE.Color('#ffe680'),
-    emissiveIntensity: 1.0,
-    shininess: 100,
+    emissiveIntensity: 1.2,
+    shininess: 80,
     side: THREE.FrontSide,
   });
   
   const building3 = new THREE.MeshPhongMaterial({
     map: windowTexture3,
     emissiveMap: windowEmissive3,
-    emissive: new THREE.Color('#ffd966'),
-    emissiveIntensity: 1.5,
-    shininess: 100,
+    emissive: new THREE.Color('#ffcc66'),
+    emissiveIntensity: 1.6,
+    shininess: 80,
     side: THREE.FrontSide,
   });
   
@@ -122,29 +124,30 @@ export function createBuildingMaterials() {
     shininess: 50,
   });
   
-  const road = new THREE.MeshStandardMaterial({
-    color: '#1a1a1a',
-    roughness: 0.95,
-    metalness: 0.05,
+  const road = new THREE.MeshPhongMaterial({
+    color: '#151515',
+    emissive: '#0a0a0a',
+    emissiveIntensity: 0.2,
+    shininess: 20,
   });
   
-  const sidewalk = new THREE.MeshStandardMaterial({
+  const sidewalk = new THREE.MeshPhongMaterial({
     color: '#2a2a2a',
-    roughness: 0.9,
+    shininess: 30,
   });
   
-  const streetlight = new THREE.MeshStandardMaterial({
+  const streetlight = new THREE.MeshPhongMaterial({
     color: '#ffeeaa',
     emissive: '#ffeeaa',
-    emissiveIntensity: 1.5,
-    roughness: 0.1,
-    metalness: 0.3,
+    emissiveIntensity: 2.0,
+    shininess: 100,
   });
   
   return {
-    building1: [building1, building1, roof, building1, building1, building1],
-    building2: [building2, building2, roof, building2, building2, building2],
-    building3: [building3, building3, roof, building3, building3, building3],
+    building1,
+    building2,
+    building3,
+    roof,
     road,
     sidewalk,
     streetlight,
