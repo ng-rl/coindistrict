@@ -9,8 +9,25 @@
   --cd-text: #F4F4F5;
   --cd-muted: #8B8B93;
   --cd-mint: #3DFF9A;
+  --cd-mint-dim: rgba(61,255,154,0.15);
   --cd-ad: #E8C36A;
+  --cd-ad-dim: rgba(232,195,106,0.18);
   --cd-due: #FF6B6B;
+}
+
+@keyframes rentPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {

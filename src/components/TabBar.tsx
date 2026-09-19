@@ -18,13 +18,18 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+          className={`flex-1 py-3 px-4 text-sm font-medium transition-colors relative ${
             activeTab === tab.id
-              ? 'text-cd-mint border-b-2 border-cd-mint'
+              ? 'text-cd-mint'
               : 'text-cd-muted hover:text-cd-text'
           }`}
         >
           {tab.label}
+          {activeTab === tab.id && (
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-cd-mint"
+            />
+          )}
         </button>
       ))}
     </nav>

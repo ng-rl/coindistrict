@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { PlotData } from './types';
 import { generateStreetData } from './data/mockData';
+import { PhoneStage } from './components/PhoneStage';
+import { Header } from './components/Header';
+import { LegendBar } from './components/LegendBar';
 import { TabBar } from './components/TabBar';
-import { Street } from './components/Street';
-import { PlotDetailSheet } from './components/PlotDetailSheet';
+import { StreetScroller } from './components/StreetScroller';
+import { PlotSheet } from './components/PlotSheet';
 
 type Tab = 'street' | 'myPlots' | 'rent';
 
@@ -20,24 +23,19 @@ function App() {
     setSelectedPlot(plot);
   };
   
-  const handleCloseDetail = () => {
+  const handleCloseSheet = () => {
     setSelectedPlot(null);
   };
   
   return (
-    <div className="h-screen w-screen bg-cd-bg flex flex-col">
-      <header className="bg-cd-surface border-b border-cd-line px-4 py-4">
-        <h1 className="text-xl font-bold text-cd-text">
-          <span className="text-cd-mint">Coin</span>District
-        </h1>
-        <p className="text-xs text-cd-muted mt-1">Horizontal crypto district</p>
-      </header>
-      
+    <PhoneStage>
+      <Header onSearchClick={() => console.log('Search clicked')} />
+      <LegendBar />
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       
       <main className="flex-1 overflow-hidden">
         {activeTab === 'street' && (
-          <Street plots={streetData} onPlotClick={handlePlotClick} />
+          <StreetScroller plots={streetData} onPlotClick={handlePlotClick} />
         )}
         
         {activeTab === 'myPlots' && (
@@ -59,8 +57,8 @@ function App() {
         )}
       </main>
       
-      <PlotDetailSheet plot={selectedPlot} onClose={handleCloseDetail} />
-    </div>
+      <PlotSheet plot={selectedPlot} onClose={handleCloseSheet} />
+    </PhoneStage>
   );
 }
 
