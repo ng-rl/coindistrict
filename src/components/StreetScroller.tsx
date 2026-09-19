@@ -45,13 +45,13 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
     const minVol = Math.min(...volumes);
     const maxVol = Math.max(...volumes);
     
-    // Account for paddingLeft in plot.x calculation
-    let accumulatedX = PADDING_LEFT;
+    // Don't bake paddingLeft into x — CSS handles it
+    let accumulatedX = 0;
     const streetPlots: StreetPlot[] = plots.map((plot) => {
       const isAd = !isCoinPlot(plot);
       const width = isAd ? AD_WIDTH : PLOT_WIDTH;
       
-      // Center of this plot in scroll-content coordinates (includes paddingLeft)
+      // Center of this plot in scroll-content coordinates (CSS paddingLeft separate)
       const centerX = accumulatedX + width / 2;
       accumulatedX += width + PLOT_GAP;
       
@@ -70,11 +70,11 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
       };
     });
     
-    // Total width = padding + all plots + gaps + padding
-    const totalWidth = PADDING_LEFT + plots.reduce((sum, plot) => {
+    // Total width = all plots + gaps (CSS padding separate)
+    const totalWidth = plots.reduce((sum, plot) => {
       const isAd = !isCoinPlot(plot);
       return sum + (isAd ? AD_WIDTH : PLOT_WIDTH);
-    }, 0) + (plots.length - 1) * PLOT_GAP + PADDING_LEFT;
+    }, 0) + (plots.length - 1) * PLOT_GAP;
     
     return {
       streetPlots,
@@ -84,23 +84,18 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-end relative">
-      {/* VIEWPORT-sized Canvas — anchored to street row, NOT inset-0 */}
+      {/* Pin Canvas to BOTTOM street band — never inset-0 / top:0 */}
       <div 
-        className="absolute left-0 right-0 pointer-events-none"
-        style={{
-          bottom: 28, // match paddingBottom
-          height: 480,
-          top: 'auto', // prevent inset-0 stretch on tall phones
-        }}
+        className="absolute left-0 right-0 bottom-0 pointer-events-none z-0"
+        style={{ height: 480 }}
       >
         <StreetScene 
           plots={streetPlots}
           scrollLeftPx={scrollLeftPx}
-          visibleRowHeight={480}
         />
       </div>
       
-      {/* Scrollable DOM layer on top */}
+      {/* Scrollable DOM layer in same bottom band */}
       <div
         className="relative z-10 overflow-x-auto overflow-y-visible scrollbar-hide"
         onScroll={(e) => setScrollLeftPx(e.currentTarget.scrollLeft)}
@@ -109,6 +104,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
           WebkitOverflowScrolling: 'touch',
           paddingTop: '36px',
           paddingBottom: '28px',
+          height: '480px',
         }}
       >
         <div
