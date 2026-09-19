@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { useLayoutEffect, type CSSProperties } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrthographicCamera } from '@react-three/drei'
 import * as THREE from 'three'
 import {
@@ -7,6 +7,13 @@ import {
   type RentStatus,
 } from './DistrictBuilding'
 import { COLORS } from './materials'
+
+/**
+ * Recommended host scale: world X = centerDomPx / STREET_PX_PER_WORLD.
+ * Auto-frame then sets ortho zoom so the full plot span fits the canvas width.
+ * Any consistent world units work — this constant documents the Cody convention.
+ */
+export const STREET_PX_PER_WORLD = 30
 
 export interface StreetPlot {
   id: string
@@ -26,8 +33,8 @@ export interface StreetSceneProps {
   className?: string
   style?: CSSProperties
   /**
-   * Ortho camera defaults — modest street-level, NOT free-fly city.
-   * Host may override zoom / position for their row height.
+   * Ortho camera — auto-framed to plot span by default.
+   * Host may override zoom / position / lookAt; overrides merge on top of auto.
    */
   camera?: {
     position?: [number, number, number]
@@ -52,6 +59,62 @@ const STRIP_MAT = new THREE.MeshStandardMaterial({
 STRIP_MAT.dispose = () => {}
 
 /**
+ * Frames the orthographic camera to the plot span so a full-street-width
+ * canvas (thousands of px) still shows every building — not a black/mint void.
+ * Host overrides (zoom / position / lookAt) merge on top of auto values.
+ */
+function AutoFrame({
+  plots,
+  cameraOverride,
+}: {
+  plots: StreetPlot[]
+  cameraOverride?: StreetSceneProps['camera']
+}) {
+  const { camera, size } = useThree()
+  const overrideZoom = cameraOverride?.zoom
+  const overridePos = cameraOverride?.position
+  const overrideLookAt = cameraOverride?.lookAt
+
+  // Stable dependency key for plot X positions
+  const plotXsKey = plots.map((p) => p.x).join(',')
+
+  useLayoutEffect(() => {
+    if (!(camera instanceof THREE.OrthographicCamera)) return
+
+    const xs = plots.map((p) => p.x)
+    const minX = xs.length ? Math.min(...xs) : -2
+    const maxX = xs.length ? Math.max(...xs) : 2
+    const midX = (minX + maxX) / 2
+    // pad ~1.2 each side for building half-width
+    const worldW = Math.max(4, maxX - minX + 2.4)
+
+    const autoZoom = size.width > 0 ? size.width / worldW : 95
+    const autoPos: [number, number, number] = [midX + 2.2, 2.2, 5]
+    const autoLookAt: [number, number, number] = [midX, 1.1, 0]
+
+    const zoom = overrideZoom ?? autoZoom
+    const pos = overridePos ?? autoPos
+    const lookAt = overrideLookAt ?? autoLookAt
+
+    camera.zoom = zoom
+    camera.position.set(pos[0], pos[1], pos[2])
+    camera.lookAt(lookAt[0], lookAt[1], lookAt[2])
+    camera.updateProjectionMatrix()
+  }, [
+    camera,
+    size.width,
+    size.height,
+    plotXsKey,
+    plots,
+    overrideZoom,
+    overridePos,
+    overrideLookAt,
+  ])
+
+  return null
+}
+
+/**
  * ONE R3F Canvas for an entire street row.
  * Host owns log height + L→R `x` spacing; kit only places DistrictBuilding instances.
  *
@@ -63,10 +126,6 @@ export function StreetScene({
   style,
   camera,
 }: StreetSceneProps) {
-  const camPos = camera?.position ?? ([3.2, 2.8, 5.5] as [number, number, number])
-  const camZoom = camera?.zoom ?? 95
-  const lookAt = camera?.lookAt ?? ([0, 1.4, 0] as [number, number, number])
-
   // Thin ground strip sized to cover the plot span (dumb dark plane — not a bg kit)
   const xs = plots.map((p) => p.x)
   const minX = xs.length ? Math.min(...xs) : -4
@@ -93,23 +152,21 @@ export function StreetScene({
           gl.setClearColor(0x000000, 0)
         }}
       >
-        <OrthographicCamera
-          makeDefault
-          position={camPos}
-          zoom={camZoom}
-          near={0.1}
-          far={80}
-          onUpdate={(c) => c.lookAt(...lookAt)}
-        />
+        <OrthographicCamera makeDefault near={0.1} far={80} />
+        <AutoFrame plots={plots} cameraOverride={camera} />
 
-        {/* Night vibe — soft ambient + cool directional; mint/gold only via buildings */}
+        {/* Night vibe — cool white/grey only; mint/gold only via building emissive */}
         <ambientLight intensity={0.28} color="#a8b0c0" />
         <directionalLight
           position={[4, 8, 5]}
           intensity={0.35}
           color="#c8d0e0"
         />
-        <directionalLight position={[-3, 4, -2]} intensity={0.12} color="#3DFF9A" />
+        <directionalLight
+          position={[-3, 4, -2]}
+          intensity={0.1}
+          color="#9aa3b2"
+        />
 
         {/* Dumb dark ground plane under the street */}
         <mesh
