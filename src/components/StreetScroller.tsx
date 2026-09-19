@@ -33,11 +33,16 @@ function computeBuildingHeight(
 export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   const streetRef = useRef<HTMLDivElement>(null);
   
-  const { streetPlots, totalStreetWidth } = useMemo(() => {
+  const { streetPlots, totalStreetWidth, cameraConfig } = useMemo(() => {
     const coinPlots = plots.filter(isCoinPlot);
     if (coinPlots.length === 0) return { 
       streetPlots: [] as StreetPlot[],
       totalStreetWidth: 0,
+      cameraConfig: {
+        zoom: 95,
+        position: [3.2, 2.8, 5.5] as [number, number, number],
+        lookAt: [0, 1.4, 0] as [number, number, number],
+      },
     };
     
     const volumes = coinPlots.map(c => c.volume24h);
@@ -74,9 +79,22 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
       return sum + (isAd ? AD_WIDTH : PLOT_WIDTH);
     }, 0) + (plots.length - 1) * PLOT_GAP;
     
+    // TJ framing: calculate camera to frame the street properly
+    const xs = streetPlots.map(p => p.x);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const midX = (minX + maxX) / 2;
+    const worldW = Math.max(4, maxX - minX + 2.4);
+    const zoom = totalWidth / worldW;
+    
     return {
       streetPlots,
       totalStreetWidth: totalWidth,
+      cameraConfig: {
+        zoom,
+        position: [midX + 2.2, 2.2, 5] as [number, number, number],
+        lookAt: [midX, 1.1, 0] as [number, number, number],
+      },
     };
   }, [plots]);
   
@@ -85,11 +103,12 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
       {/* Scrollable container with StreetScene INSIDE */}
       <div
         ref={streetRef}
-        className="overflow-x-auto overflow-y-hidden scrollbar-hide relative"
+        className="overflow-x-auto overflow-y-visible scrollbar-hide relative"
         style={{
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '28px',
+          paddingTop: '20px',
           paddingLeft: '20px',
           paddingRight: '20px',
         }}
@@ -110,7 +129,10 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
               height: '420px',
             }}
           >
-            <StreetScene plots={streetPlots} />
+            <StreetScene 
+              plots={streetPlots}
+              camera={cameraConfig}
+            />
           </div>
           
           {/* DOM badges/meta overlay - scrolls with Canvas */}
