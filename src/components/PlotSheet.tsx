@@ -1,5 +1,6 @@
 import { PlotData, isCoinPlot, isAdPlot } from '../types';
 import { StatusPill } from './StatusPill';
+import { formatUsd } from '../utils/format';
 
 interface PlotSheetProps {
   plot: PlotData | null;
@@ -45,21 +46,21 @@ export function PlotSheet({ plot, onClose }: PlotSheetProps) {
               <div className="space-y-1">
                 <div className="text-xs text-cd-muted uppercase tracking-wide">Market Cap</div>
                 <div className="text-lg font-mono text-cd-text">
-                  ${(plot.marketCap / 1000000000).toFixed(2)}B
+                  {formatUsd(plot.marketCap, 2)}
                 </div>
               </div>
               
               <div className="space-y-1">
                 <div className="text-xs text-cd-muted uppercase tracking-wide">24h Volume</div>
                 <div className="text-lg font-mono text-cd-text">
-                  ${(plot.volume24h / 1000000000).toFixed(2)}B
+                  {formatUsd(plot.volume24h, 2)}
                 </div>
               </div>
               
               <div className="space-y-1">
                 <div className="text-xs text-cd-muted uppercase tracking-wide">Weekly Rent</div>
                 <div className="text-lg font-mono text-cd-text">
-                  ${((plot.volume24h / 1000000000) * 0.05).toFixed(3)}B
+                  {formatUsd(plot.volume24h * 0.0005, 1)}
                 </div>
               </div>
               

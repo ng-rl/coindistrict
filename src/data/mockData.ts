@@ -163,10 +163,18 @@ export const MOCK_COINS: CoinData[] = [
   },
 ];
 
+const AD_INVENTORY: { advertiser: string; tagline: string }[] = [
+  { advertiser: 'Northline', tagline: 'Zero-fee spot. Night desk open.' },
+  { advertiser: 'Vaultworks', tagline: 'Cold storage, warm UX.' },
+  { advertiser: 'Meridian Labs', tagline: 'Build on the block.' },
+];
+
 function createAdPlot(index: number) {
+  const ad = AD_INVENTORY[index % AD_INVENTORY.length];
   return {
     id: `ad-${index}`,
-    advertiser: `Sponsor ${index}`,
+    advertiser: ad.advertiser,
+    tagline: ad.tagline,
     isAd: true as const,
   };
 }

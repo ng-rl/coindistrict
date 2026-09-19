@@ -12,6 +12,7 @@ export interface CoinData {
 export interface AdPlot {
   id: string;
   advertiser: string;
+  tagline?: string;
   isAd: true;
 }
 
