@@ -1,6 +1,7 @@
 import { PlotData, isAdPlot, isCoinPlot } from '../types';
 import { StatusPill } from './StatusPill';
 import { formatUsd, rankLabel } from '../utils/format';
+import { CoinLogo } from './CoinLogo';
 
 interface FocusCardProps {
   plot: PlotData | undefined;
@@ -21,6 +22,7 @@ export function FocusCard({ plot, index, rank, count, onOpen }: FocusCardProps) 
       style={{ background: 'rgba(20,20,22,0.82)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
       aria-label={coin ? `${coin.name} details` : 'Sponsored plot details'}
     >
+      {coin && <CoinLogo src={coin.image} ticker={coin.ticker} size={30} ring="none" />}
       <div
         className="shrink-0 font-mono text-[11px] font-semibold px-2 py-1 rounded-md"
         style={{

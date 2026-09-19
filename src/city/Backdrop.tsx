@@ -117,10 +117,10 @@ export function Backdrop({ streetLength }: BackdropProps) {
     material.uniforms.uTime.value = clock.elapsedTime;
   });
 
-  // street lamps along the curb
+  // street lamps stand in the gaps between plots, on the tower line, so they never cover a facade
   const lamps = useMemo(() => {
     const out: number[] = [];
-    for (let x = -30; x < streetLength + 30; x += PLOT_SPACING * 2) out.push(x + PLOT_SPACING * 0.5);
+    for (let i = -10; i * PLOT_SPACING < streetLength + 30; i++) out.push((i + 0.5) * PLOT_SPACING);
     return out;
   }, [streetLength]);
 

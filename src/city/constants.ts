@@ -14,7 +14,8 @@ export const AD_HEIGHT = 5.6;
 /** Depth layout along Z. Towers stand on z = 0, camera looks from +Z. */
 export const TOWER_Z = 0;
 export const CURB_Z = 1.9;
-export const LAMP_Z = 3.1;
+/** lamps stand on the tower line, in the gaps between plots */
+export const LAMP_Z = 0.2;
 export const STREET_Z0 = 3.6;
 export const STREET_Z1 = 11.2;
 

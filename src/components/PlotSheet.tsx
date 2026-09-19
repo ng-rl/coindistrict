@@ -1,6 +1,8 @@
 import { PlotData, isCoinPlot, isAdPlot } from '../types';
 import { StatusPill } from './StatusPill';
 import { formatUsd } from '../utils/format';
+import { CoinLogo } from './CoinLogo';
+import { PriceChart } from './PriceChart';
 
 interface PlotSheetProps {
   plot: PlotData | null;
@@ -34,12 +36,19 @@ export function PlotSheet({ plot, onClose }: PlotSheetProps) {
         
         {isCoinPlot(plot) && (
           <div>
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-cd-text">{plot.name}</h2>
-                <p className="text-lg font-mono text-cd-muted mt-1">{plot.ticker}</p>
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <CoinLogo src={plot.image} ticker={plot.ticker} size={44} ring={plot.rentStatus === 'PAID' ? 'paid' : 'due'} />
+                <div>
+                  <h2 className="text-2xl font-bold text-cd-text leading-tight">{plot.name}</h2>
+                  <p className="text-base font-mono text-cd-muted">{plot.ticker}</p>
+                </div>
               </div>
               <StatusPill status={plot.rentStatus} />
+            </div>
+
+            <div className="mb-5 p-3 bg-cd-bg rounded-lg border border-cd-line">
+              <PriceChart coin={plot} />
             </div>
             
             <div className="grid grid-cols-2 gap-4">

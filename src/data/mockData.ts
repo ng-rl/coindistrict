@@ -179,8 +179,9 @@ function createAdPlot(index: number) {
   };
 }
 
-export function generateStreetData(): PlotData[] {
-  const sortedCoins = [...MOCK_COINS].sort((a, b) => b.marketCap - a.marketCap);
+/** Sort by market cap (L→R) and insert a paid ad plot after every 7 organic plots. */
+export function buildStreet(coins: CoinData[]): PlotData[] {
+  const sortedCoins = [...coins].sort((a, b) => b.marketCap - a.marketCap);
   const street: PlotData[] = [];
   
   sortedCoins.forEach((coin, index) => {
@@ -191,4 +192,8 @@ export function generateStreetData(): PlotData[] {
   });
   
   return street;
+}
+
+export function generateStreetData(): PlotData[] {
+  return buildStreet(MOCK_COINS);
 }

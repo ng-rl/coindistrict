@@ -102,6 +102,13 @@ body {
 .crown-badge--focus {
   transform: translateY(-6px) scale(1.12);
 }
+.crown-badge--logo {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+}
 .crown-badge--ad {
   background: var(--cd-ad);
   color: #1a1408;

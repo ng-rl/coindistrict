@@ -12,6 +12,7 @@ import { CameraRig } from './CameraRig';
 import { Towers } from './Towers';
 import { Backdrop } from './Backdrop';
 import { Ground } from './Ground';
+import { CoinLogo } from '../components/CoinLogo';
 
 interface CityStageProps {
   plots: PlotData[];
@@ -60,8 +61,7 @@ function CrownLabels({ towers, focusIndex }: { towers: ReturnType<typeof buildTo
       {towers.map((t) => {
         const dist = Math.abs(t.index - focusIndex);
         if (dist > 3) return null;
-        const isAd = !isCoinPlot(t.plot);
-        const text = isCoinPlot(t.plot) ? t.plot.ticker.slice(0, 4) : 'AD';
+        const coin = isCoinPlot(t.plot) ? t.plot : null;
         const focused = dist === 0;
         return (
           <Html
@@ -72,10 +72,10 @@ function CrownLabels({ towers, focusIndex }: { towers: ReturnType<typeof buildTo
             style={{ pointerEvents: 'none' }}
           >
             <div
-              className={`crown-badge ${isAd ? 'crown-badge--ad' : ''} ${focused ? 'crown-badge--focus' : ''}`}
+              className={`crown-badge ${coin ? 'crown-badge--logo' : 'crown-badge--ad'} ${focused ? 'crown-badge--focus' : ''}`}
               style={{ opacity: focused ? 1 : dist === 1 ? 0.85 : dist === 2 ? 0.5 : 0.25 }}
             >
-              {text}
+              {coin ? <CoinLogo src={coin.image} ticker={coin.ticker} size={30} ring={coin.rentStatus === 'PAID' ? 'paid' : 'due'} /> : 'AD'}
             </div>
           </Html>
         );

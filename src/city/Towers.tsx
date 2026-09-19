@@ -137,6 +137,14 @@ export function Towers({ towers, focusRef, onMesh }: TowersProps) {
     return () => onMesh(null, []);
   }, [towers, instanceToTower, onMesh]);
 
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      billboards.forEach((b) => b.tex.dispose());
+    },
+    [geometry, billboards]
+  );
+
   const outlineGeo = useMemo(() => new THREE.EdgesGeometry(createFloorBox()), []);
   const outlineTarget = useRef({ x: 0, w: 1, h: 1, d: 1 });
 

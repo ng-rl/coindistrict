@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PlotData, isCoinPlot } from './types';
-import { generateStreetData } from './data/mockData';
+import { buildStreet } from './data/mockData';
+import { useMarketData } from './data/market';
 import { PhoneStage } from './components/PhoneStage';
 import { Header } from './components/Header';
 import { LegendBar } from './components/LegendBar';
@@ -22,7 +23,8 @@ function App() {
   const [selectedPlot, setSelectedPlot] = useState<PlotData | null>(null);
   const [focusIndex, setFocusIndex] = useState(0);
   const [hintVisible, setHintVisible] = useState(true);
-  const streetData = useMemo(() => generateStreetData(), []);
+  const market = useMarketData();
+  const streetData = useMemo(() => buildStreet(market.coins), [market.coins]);
   const controller = useRef(new StreetController()).current;
 
   useEffect(() => {
@@ -66,6 +68,7 @@ function App() {
   };
 
   const focusPlot = streetData[focusIndex];
+  const sheetPlot = selectedPlot ? streetData.find((p) => p.id === selectedPlot.id) ?? selectedPlot : null;
 
   return (
     <PhoneStage>
@@ -75,7 +78,7 @@ function App() {
       <div className="hud-top absolute left-0 right-0 top-0 z-10 pointer-events-none">
         <div className="pointer-events-auto">
           <Header onSearchClick={() => controller.goTo(0)} onShareClick={handleShare} />
-          <LegendBar />
+          <LegendBar source={market.source} updatedAt={market.updatedAt} />
         </div>
       </div>
 
@@ -109,7 +112,7 @@ function App() {
         </div>
       )}
 
-      <PlotSheet plot={selectedPlot} onClose={() => setSelectedPlot(null)} />
+      <PlotSheet plot={sheetPlot} onClose={() => setSelectedPlot(null)} />
     </PhoneStage>
   );
 }

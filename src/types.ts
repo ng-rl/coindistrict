@@ -7,7 +7,16 @@ export interface CoinData {
   marketCap: number;
   volume24h: number;
   rentStatus: RentStatus;
+  /** logo URL (CoinGecko) */
+  image?: string;
+  priceUsd?: number;
+  /** 24h price change, percent */
+  change24h?: number;
+  /** 7d hourly price series, oldest first */
+  sparkline7d?: number[];
 }
+
+export type DataSource = 'live' | 'mock';
 
 export interface AdPlot {
   id: string;
