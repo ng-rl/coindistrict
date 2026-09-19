@@ -3,11 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0B0C" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>CoinDistrict</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Netlify Forms: static mirror of the lease form rendered by the app -->
+    <form name="lease" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="lot" />
+      <input type="text" name="tier" />
+      <input type="text" name="project" />
+      <input type="text" name="ticker" />
+      <input type="text" name="website" />
+      <input type="email" name="email" />
+      <input type="text" name="coingecko" />
+      <textarea name="notes"></textarea>
+      <input type="text" name="bot-field" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

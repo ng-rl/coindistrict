@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export function Header({ onSearchClick, onShareClick }: HeaderProps) {
   return (
-    <header className="shrink-0 bg-cd-surface border-b border-cd-line px-4 py-3 flex items-center justify-between">
+    <header className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <BrandMark />
         <h1 
@@ -24,7 +24,7 @@ export function Header({ onSearchClick, onShareClick }: HeaderProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={onShareClick}
-          className="flex items-center justify-center bg-cd-surface border border-cd-line rounded-lg hover:bg-cd-line/30 transition-colors"
+          className="hud-btn flex items-center justify-center border border-cd-line rounded-lg hover:bg-cd-line/30 transition-colors"
           style={{
             width: '36px',
             height: '36px',
@@ -39,7 +39,7 @@ export function Header({ onSearchClick, onShareClick }: HeaderProps) {
         
         <button
           onClick={onSearchClick}
-          className="flex items-center justify-center bg-cd-surface border border-cd-line rounded-lg hover:bg-cd-line/30 transition-colors"
+          className="hud-btn flex items-center justify-center border border-cd-line rounded-lg hover:bg-cd-line/30 transition-colors"
           style={{
             width: '36px',
             height: '36px',

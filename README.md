@@ -1,150 +1,93 @@
 # CoinDistrict
 
-> Horizontal crypto district: plots are projects. L→R = biggest mcap → smaller; height = on-chain volume; weekly rent keeps lights on.
+> A horizontal crypto district you cruise: plots are projects, left = biggest market cap, tower height = on-chain volume (log), weekly rent keeps the lights on, every 7th plot is a paid ad.
 
-## Overview
+Live: https://coindistrict.netlify.app · Drive space: `Spaces/coin-district` (THESIS, SPEC, HEIGHT, CREATIVE FRAME, CRAFT REFS)
 
-CoinDistrict is a visual representation of the cryptocurrency market as an interactive horizontal street. Each building represents a crypto project, with positioning and appearance driven by real market metrics.
+## The street (and how it makes money)
 
-### Core Mechanics
+| Zone | Plots | How you get in | Order | Height |
+| --- | --- | --- | --- | --- |
+| **Downtown** | top 25 by market cap | earned, never for sale | market cap | 24h volume (log) |
+| **District** | leased plots | weekly rent (Storefront $199 · Corner $499 · Tower $1,499) | tier, then tenure | 24h volume if on-chain data, else base |
+| **For lease** | empty lots at the end | tap the FOR LEASE sign → lease sheet | — | — |
 
-- **Street Order**: Left to right, sorted by market cap (descending)
-- **Building Height**: Determined by 24h trading volume / TVL
-- **Rent Status**: PAID (active, glowing) vs DUE (dimmed, at eviction risk)
-- **Ad Plots**: Sponsored plots appear every ~7 organic buildings
-- **Allocation**: Storefront promo space on a plot
+Ads every 7th plot across both zones (gold, height decoupled, $2,500/wk). Rent buys storefronts, crowns and share-card branding, never height or order. Strategy: the COMMERCIAL doc in the Drive space.
 
-## Design System
+- Lease requests post to **Netlify Forms** (form `lease`, enabled on the site) and are kept on-device for the My Plots tab. Set `VITE_STRIPE_LINK_TIER1..3` (Stripe payment links) to offer **Pay & lease now**.
+- Tenants live in `src/data/ledger.ts` (v1 static ledger): `rentPaidThrough` + 3-day grace drives PAID / DUE; optional `coingeckoId` pulls live volume, price and logo.
 
-Vibe: Quiet night-market financial district. Soft black, ONE electric mint accent (#3DFF9A). Transit-map wordmark energy.
+## What this build is
 
-### Color Palette
+Per the CREATIVE FRAME pivot: **one continuous WebGL night city is the whole stage**, product chrome is a HUD on top. No CSS boxes, no DOM card strip, no per-plot canvases, no screenshot-as-UI.
+
+- **Stage** — React Three Fiber scene: ranked towers on the rank axis (+X), a procedural backdrop city behind them, wet-street reflection, street lamps, horizon haze, stars, fog, bloom.
+- **Facades** — one custom shader draws windows procedurally on a world-unit grid, so density is constant across any tower size. Lit windows are emissive and bloom. Per-instance attributes carry tint, lit ratio, glow, breathing phase, and dim.
+- **Rank axis** — L→R by market cap. Camera only moves along X. Drag with inertia + snap-to-plot, trackpad/wheel, arrow keys. Tap a tower to open its sheet.
+- **Height** — `log10(volume24h)` normalised across the street and lerped into `[H_MIN, H_MAX]` (HEIGHT doc). Ads use a fixed rate-card height.
+- **Life signals** — PAID: mint-leaning windows that breathe (2.4 s, staggered by plot index × 120 ms) plus a mint crown light. DUE: cold grey glass, 16 % lit, dimmed facade, no breath. AD: gold windows + gold storefront billboard. Backdrop city is quiet pale glass so mint stays the one accent.
+- **HUD** — Header + LegendBar float over the stage; crown ticker badges (mint / gold) track each tower; FocusCard shows the plot under the thumb; RankRail is a transit-map strip of the whole street (tap to jump); TabBar; PlotSheet.
+- **ShareCard** — composes the live WebGL frame into a 1080×1350 PNG with brand, legend, and the focused plot. Uses the Web Share API when available, otherwise downloads.
+- `prefers-reduced-motion` disables breathing and the intro dolly.
+
+## Design tokens (locked)
 
 ```css
---cd-bg: #0B0B0C        /* Background */
---cd-surface: #141416   /* Surface elements */
---cd-line: #222226      /* Borders & dividers */
---cd-text: #F4F4F5      /* Primary text */
---cd-muted: #8B8B93     /* Secondary text */
---cd-mint: #3DFF9A      /* Accent (paid rent) */
---cd-ad: #E8C36A        /* Advertisement plots */
---cd-due: #FF6B6B       /* Overdue rent */
+--cd-bg: #0B0B0C   --cd-surface: #141416   --cd-line: #222226
+--cd-text: #F4F4F5 --cd-muted: #8B8B93
+--cd-mint: #3DFF9A (paid / active / brand — the ONE accent)
+--cd-ad: #E8C36A   (sponsored plots only)
+--cd-due: #FF6B6B  (rent due)
 ```
 
-## Tech Stack
+## Tuning knobs
 
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite 6
-- **Styling**: Tailwind CSS 3 with custom design tokens
-- **3D Buildings**: CSS 3D transforms (architecture ready for WebGL swap)
+| What | Where |
+| --- | --- |
+| Plot spacing, height range, ad height, camera framing, fog | `src/city/constants.ts` |
+| Height curve, massing / setbacks, masts | `src/city/layout.ts` |
+| Window size, facade brightness, breathing, reflection fade | `src/city/shaders.ts`, `src/city/FacadeMaterial.ts` |
+| Per-kind window treatment (PAID / DUE / AD) | `kindStyle()` in `src/city/Towers.tsx` |
+| Backdrop rows (depth, height, density) | `generateBlocks()` in `src/city/Backdrop.tsx` |
+| Bloom / vignette | `EffectComposer` in `src/city/CityStage.tsx` |
+| Swipe physics, snap, wheel, keys | `src/city/StreetController.ts` |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-
-### Installation
-
-```bash
-npm install
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-### Build
-
-```bash
-npm run build
-```
-
-Outputs to `dist/` directory.
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Project Structure
+## Project structure
 
 ```
 src/
-├── components/
-│   ├── Building.tsx          # 3D building component (coin & ad plots)
-│   ├── Street.tsx            # Horizontal scrollable street container
-│   ├── TabBar.tsx            # Navigation tabs
-│   └── PlotDetailSheet.tsx   # Bottom sheet for plot details
-├── data/
-│   └── mockData.ts           # Mock coin data and street generation
-├── types.ts                  # TypeScript type definitions
-├── App.tsx                   # Main application component
-├── main.tsx                  # Application entry point
-└── index.css                 # Global styles & Tailwind directives
+├── city/
+│   ├── CityStage.tsx        # Canvas, scene, post-processing, tap picking, crown labels
+│   ├── Towers.tsx           # ranked towers (instanced), reflection pass, masts, crown lights, billboards, focus outline
+│   ├── Backdrop.tsx         # filler city, lamps, stars, haze, rank curb line
+│   ├── Ground.tsx           # street shader
+│   ├── CameraRig.tsx        # camera on the rank axis + intro dolly
+│   ├── StreetController.ts  # drag / inertia / snap / wheel / keyboard
+│   ├── FacadeMaterial.ts    # shader material + instanced attribute helpers
+│   ├── shaders.ts           # facade / ground / haze GLSL
+│   ├── layout.ts            # log height, massing, tower specs
+│   └── constants.ts         # world layout, camera, palette (linear)
+├── components/              # Header, LegendBar, TabBar, FocusCard, RankRail, PlotSheet, LeaseSheet, MyPlotsPanel, RentPanel, ShareCard, ...
+├── data/market.ts           # CoinGecko polling + tenant enrichment
+├── data/ledger.ts           # lease ledger, tiers, pricing, lease requests
+├── data/mockData.ts         # street builder (downtown → district → lots, ads every 7) + sample coins
+└── types.ts
+scripts/shots.mjs            # headless visual QA (phone + iPad, swipe, ad, sheet)
 ```
 
-## Features
-
-### v0 Scaffold (Current)
-
-- ✅ Horizontal scrollable street with snap points
-- ✅ CSS 3D mesh buildings (coin plots + ad plots)
-- ✅ Mock data: 20 coins sorted by market cap
-- ✅ Ad insertions every ~7 plots
-- ✅ Rent status visualization (PAID glow, DUE dimmed)
-- ✅ Tab navigation stubs (Street / My Plots / Rent)
-- ✅ Bottom sheet for plot details
-- ✅ Mobile-first responsive design
-- ✅ Fran's locked palette as CSS variables
-
-### Architecture Notes
-
-The `Building` component is designed with a swappable renderer interface:
-
-```tsx
-interface BuildingProps {
-  plot: CoinData | AdPlot;
-  onClick: () => void;
-}
-```
-
-Current implementation uses CSS 3D transforms. The component can be refactored to use WebGL (Three.js, React Three Fiber) without changing the parent components or data flow.
-
-### Future Considerations
-
-- Live market data integration (CoinGecko, CoinMarketCap)
-- WebGL building renderer for performance & visual fidelity
-- User authentication & plot ownership
-- Rent payment mechanics
-- Allocation (storefront ads) system
-- Shareable street freeze-frames
-- Street navigation (minimap, search, jump-to-plot)
-
-## Deployment
-
-This project is configured for Netlify static site deployment:
-
-1. Connect your GitHub repo to Netlify
-2. Build settings are in `netlify.toml`
-3. Deploy automatically on push to `main`
-
-Manual deploy:
+## Develop
 
 ```bash
-npm run build
-netlify deploy --prod --dir=dist
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # tsc -b && vite build → dist/
+npm run preview
 ```
 
-## License
+Visual QA (what Fran gates): build, `npx vite preview --port 4173`, then
+`CHROME_PATH=/path/to/chrome node scripts/shots.mjs ./shots` (needs `playwright`).
+In the browser console `__coindistrict.goTo(i, 0)` jumps the street to plot `i`.
 
-Private project - All rights reserved
+## Deploy
 
-## Contact
-
-For questions or feedback, open an issue in the repository.
+Netlify static site (`netlify.toml`): build `npm run build`, publish `dist/`, SPA redirect.
