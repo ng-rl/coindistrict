@@ -52,15 +52,34 @@ body {
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
 #root {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
+  height: 100dvh; /* iOS Safari: exclude the browser toolbar */
   overflow: hidden;
+}
+
+.phone-frame {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 896px;
+}
+@media (max-width: 900px) {
+  .phone-frame {
+    max-height: none;
+  }
 }
 
 /* ---- HUD over the city stage ---- */
 .hud-top {
   background: linear-gradient(180deg, rgba(11, 11, 12, 0.92) 0%, rgba(11, 11, 12, 0.6) 55%, rgba(11, 11, 12, 0) 100%);
+  padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: 18px;
 }
 .hud-bottom {
@@ -120,6 +139,12 @@ body {
   border: 0;
   padding: 0;
   cursor: pointer;
+}
+
+.plot-sheet {
+  max-height: 85vh;
+  max-height: 85dvh;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* sheet motion (SPEC §5) */

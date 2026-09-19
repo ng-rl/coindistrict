@@ -25,7 +25,7 @@ export function PlotSheet({ plot, onClose }: PlotSheetProps) {
       />
       
       <div
-        className="fixed bottom-0 left-0 right-0 bg-cd-surface z-50 p-6 max-h-[70vh] overflow-y-auto"
+        className="plot-sheet fixed bottom-0 left-0 right-0 bg-cd-surface z-50 px-6 pt-6 pb-0 overflow-y-auto"
         style={{
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',
@@ -110,15 +110,17 @@ export function PlotSheet({ plot, onClose }: PlotSheetProps) {
           </div>
         )}
         
+        <div className="sticky bottom-0 -mx-6 px-6 pt-4 bg-cd-surface" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
         <button
           onClick={onClose}
-          className="w-full mt-6 py-3 bg-cd-mint text-cd-bg font-semibold rounded-lg transition-opacity hover:opacity-90"
+          className="w-full py-3 bg-cd-mint text-cd-bg font-semibold rounded-lg transition-opacity hover:opacity-90"
           style={{
             transition: 'opacity 150ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           Close
         </button>
+        </div>
       </div>
       
       <style>{`
