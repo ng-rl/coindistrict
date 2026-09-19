@@ -147,6 +147,22 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+.lease-input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--cd-line);
+  background: var(--cd-bg);
+  color: var(--cd-text);
+  font-size: 16px; /* prevents iOS zoom on focus */
+}
+.lease-input:focus {
+  outline: none;
+  border-color: var(--cd-mint);
+}
+
 /* sheet motion (SPEC §5) */
 @keyframes sheetSlideUp {
   from { transform: translateY(110%); }

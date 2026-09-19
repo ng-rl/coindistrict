@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CoinData, DataSource, RentStatus } from '../types';
 import { MOCK_COINS } from './mockData';
+import { DOWNTOWN_SIZE, TENANTS, tenantToCoin } from './ledger';
 
 /**
  * Live market data from CoinGecko's public API (no key needed; ~30 req/min).
@@ -8,7 +9,7 @@ import { MOCK_COINS } from './mockData';
  * Falls back to the mock street if the API is unreachable or rate-limited.
  */
 const API = 'https://api.coingecko.com/api/v3';
-const STREET_SIZE = 20;
+const STREET_SIZE = DOWNTOWN_SIZE;
 export const REFRESH_MS = 60_000;
 
 /** Rent is a CoinDistrict mechanic, not market data. Until the ledger exists, a fixed demo set is DUE. */
@@ -57,6 +58,31 @@ export async function fetchMarkets(signal?: AbortSignal): Promise<CoinData[]> {
     }));
 }
 
+/** Live volume / price / logo for tenants that gave a CoinGecko id. Height stays honest: volume or base. */
+export async function enrichTenants(signal?: AbortSignal): Promise<CoinData[]> {
+  const base = TENANTS.map(tenantToCoin);
+  const ids = TENANTS.filter((t) => t.lease.coingeckoId).map((t) => t.lease.coingeckoId as string);
+  if (ids.length === 0) return base;
+  const url = `${API}/coins/markets?vs_currency=usd&ids=${ids.join(',')}&sparkline=true&price_change_percentage=24h`;
+  const res = await fetch(url, { signal, headers: headers() });
+  if (!res.ok) throw new Error(`coingecko ${res.status}`);
+  const rows = (await res.json()) as CgMarket[];
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return base.map((c) => {
+    const r = c.lease?.coingeckoId ? byId.get(c.lease.coingeckoId) : undefined;
+    if (!r) return c;
+    return {
+      ...c,
+      marketCap: r.market_cap,
+      volume24h: r.total_volume,
+      image: r.image,
+      priceUsd: r.current_price,
+      change24h: r.price_change_percentage_24h ?? undefined,
+      sparkline7d: r.sparkline_in_7d?.price,
+    };
+  });
+}
+
 export type PricePoint = [number, number];
 const chartCache = new Map<string, { at: number; points: PricePoint[] }>();
 
@@ -74,6 +100,7 @@ export async function fetchPriceChart(id: string, days: 1 | 7 = 1): Promise<Pric
 
 export interface MarketState {
   coins: CoinData[];
+  tenants: CoinData[];
   source: DataSource;
   updatedAt: number | null;
   error: string | null;
@@ -81,7 +108,7 @@ export interface MarketState {
 
 /** Polls the market every REFRESH_MS while the tab is visible. Starts on mock, swaps to live on first success. */
 export function useMarketData(): MarketState {
-  const [state, setState] = useState<MarketState>({ coins: MOCK_COINS, source: 'mock', updatedAt: null, error: null });
+  const [state, setState] = useState<MarketState>({ coins: MOCK_COINS, tenants: TENANTS.map(tenantToCoin), source: 'mock', updatedAt: null, error: null });
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -94,7 +121,9 @@ export function useMarketData(): MarketState {
       try {
         const coins = await fetchMarkets(controller.signal);
         if (!alive || coins.length < 5) return;
-        setState({ coins, source: 'live', updatedAt: Date.now(), error: null });
+        const tenants = await enrichTenants(controller.signal).catch(() => TENANTS.map(tenantToCoin));
+        if (!alive) return;
+        setState({ coins, tenants, source: 'live', updatedAt: Date.now(), error: null });
       } catch (e) {
         if (!alive || (e as Error).name === 'AbortError') return;
         setState((s) => ({ ...s, error: (e as Error).message }));

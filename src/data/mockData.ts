@@ -1,4 +1,5 @@
-import { CoinData, PlotData } from '../types';
+import { CoinData, LotPlot, PlotData, Zone, isCoinPlot, isLeasedPlot, isLotPlot } from '../types';
+import { DOWNTOWN_SIZE, LOTS_FOR_LEASE, TENANTS, sortTenants, tenantToCoin } from './ledger';
 
 export const MOCK_COINS: CoinData[] = [
   {
@@ -179,19 +180,42 @@ function createAdPlot(index: number) {
   };
 }
 
-/** Sort by market cap (L→R) and insert a paid ad plot after every 7 organic plots. */
-export function buildStreet(coins: CoinData[]): PlotData[] {
-  const sortedCoins = [...coins].sort((a, b) => b.marketCap - a.marketCap);
+/**
+ * The street: Downtown (top 25 by market cap, earned) → District (leased plots, by tier then tenure)
+ * → empty lots for lease. A paid ad plot is inserted after every 7 organic plots across both zones.
+ */
+export function buildStreet(coins: CoinData[], tenants: CoinData[] = TENANTS.map(tenantToCoin), lots = LOTS_FOR_LEASE): PlotData[] {
+  const downtown = [...coins].sort((a, b) => b.marketCap - a.marketCap).slice(0, DOWNTOWN_SIZE);
+  const district = sortTenants(tenants);
+  const organic: CoinData[] = [...downtown, ...district];
   const street: PlotData[] = [];
-  
-  sortedCoins.forEach((coin, index) => {
-    street.push(coin);
-    if ((index + 1) % 7 === 0) {
-      street.push(createAdPlot(Math.floor(index / 7)));
-    }
+  organic.forEach((plot, index) => {
+    street.push(plot);
+    if ((index + 1) % 7 === 0) street.push(createAdPlot(Math.floor(index / 7)));
   });
-  
+  const firstLot = organic.length + 1;
+  for (let i = 0; i < lots; i++) {
+    const lot: LotPlot = { id: `lot-${firstLot + i}`, isLot: true, lotNumber: firstLot + i };
+    street.push(lot);
+  }
   return street;
+}
+
+/** Index of the first District plot (leased or lot), or the street length if there is none. */
+export function districtStart(street: PlotData[]): number {
+  const i = street.findIndex((p) => isLotPlot(p) || isLeasedPlot(p));
+  return i < 0 ? street.length : i;
+}
+
+export function zoneOf(street: PlotData[], index: number): Zone {
+  return index >= districtStart(street) ? 'district' : 'downtown';
+}
+
+/** Rank among downtown coins (1-based), or null for District plots. */
+export function downtownRank(street: PlotData[], index: number): number | null {
+  const plot = street[index];
+  if (!plot || !isCoinPlot(plot) || plot.lease) return null;
+  return street.slice(0, index + 1).filter((p) => isCoinPlot(p) && !p.lease).length;
 }
 
 export function generateStreetData(): PlotData[] {

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { DataSource } from '../types';
+import { DataSource, Zone } from '../types';
 
 interface LegendBarProps {
   source: DataSource;
   updatedAt: number | null;
+  zone: Zone;
 }
 
-export function LegendBar({ source, updatedAt }: LegendBarProps) {
+export function LegendBar({ source, updatedAt, zone }: LegendBarProps) {
   const [, tick] = useState(0);
   useEffect(() => {
     const t = window.setInterval(() => tick((n) => n + 1), 5000);
@@ -16,7 +17,18 @@ export function LegendBar({ source, updatedAt }: LegendBarProps) {
   return (
     <div className="shrink-0 px-4 pb-2">
       <div className="flex items-center justify-center gap-3 text-xs text-cd-muted">
-        <span>← Higher mcap · Lower →</span>
+        {zone === 'downtown' ? (
+          <span>
+            <span className="text-cd-text font-semibold">Downtown</span> · top 25 by mcap
+          </span>
+        ) : (
+          <span>
+            <span style={{ color: 'var(--cd-mint)' }} className="font-semibold">
+              District
+            </span>{' '}
+            · leased plots
+          </span>
+        )}
         <span className="text-cd-line">|</span>
         <span>Ads every 7</span>
         <span className="text-cd-line">|</span>

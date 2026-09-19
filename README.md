@@ -4,6 +4,19 @@
 
 Live: https://coindistrict.netlify.app · Drive space: `Spaces/coin-district` (THESIS, SPEC, HEIGHT, CREATIVE FRAME, CRAFT REFS)
 
+## The street (and how it makes money)
+
+| Zone | Plots | How you get in | Order | Height |
+| --- | --- | --- | --- | --- |
+| **Downtown** | top 25 by market cap | earned, never for sale | market cap | 24h volume (log) |
+| **District** | leased plots | weekly rent (Storefront $199 · Corner $499 · Tower $1,499) | tier, then tenure | 24h volume if on-chain data, else base |
+| **For lease** | empty lots at the end | tap the FOR LEASE sign → lease sheet | — | — |
+
+Ads every 7th plot across both zones (gold, height decoupled, $2,500/wk). Rent buys storefronts, crowns and share-card branding, never height or order. Strategy: the COMMERCIAL doc in the Drive space.
+
+- Lease requests post to **Netlify Forms** (form `lease`, enabled on the site) and are kept on-device for the My Plots tab. Set `VITE_STRIPE_LINK_TIER1..3` (Stripe payment links) to offer **Pay & lease now**.
+- Tenants live in `src/data/ledger.ts` (v1 static ledger): `rentPaidThrough` + 3-day grace drives PAID / DUE; optional `coingeckoId` pulls live volume, price and logo.
+
 ## What this build is
 
 Per the CREATIVE FRAME pivot: **one continuous WebGL night city is the whole stage**, product chrome is a HUD on top. No CSS boxes, no DOM card strip, no per-plot canvases, no screenshot-as-UI.
@@ -54,8 +67,10 @@ src/
 │   ├── shaders.ts           # facade / ground / haze GLSL
 │   ├── layout.ts            # log height, massing, tower specs
 │   └── constants.ts         # world layout, camera, palette (linear)
-├── components/              # Header, LegendBar, TabBar, FocusCard, RankRail, PlotSheet, ShareCard, ...
-├── data/mockData.ts         # 20 coins + ad inventory (live mcap/volume later)
+├── components/              # Header, LegendBar, TabBar, FocusCard, RankRail, PlotSheet, LeaseSheet, MyPlotsPanel, RentPanel, ShareCard, ...
+├── data/market.ts           # CoinGecko polling + tenant enrichment
+├── data/ledger.ts           # lease ledger, tiers, pricing, lease requests
+├── data/mockData.ts         # street builder (downtown → district → lots, ads every 7) + sample coins
 └── types.ts
 scripts/shots.mjs            # headless visual QA (phone + iPad, swipe, ad, sheet)
 ```

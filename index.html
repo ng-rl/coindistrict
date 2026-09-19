@@ -11,6 +11,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Netlify Forms: static mirror of the lease form rendered by the app -->
+    <form name="lease" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="lot" />
+      <input type="text" name="tier" />
+      <input type="text" name="project" />
+      <input type="text" name="ticker" />
+      <input type="text" name="website" />
+      <input type="email" name="email" />
+      <input type="text" name="coingecko" />
+      <textarea name="notes"></textarea>
+      <input type="text" name="bot-field" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

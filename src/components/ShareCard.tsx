@@ -1,4 +1,4 @@
-import { PlotData, isAdPlot, isCoinPlot } from '../types';
+import { PlotData, isAdPlot, isCoinPlot, isLotPlot } from '../types';
 import { formatUsd } from '../utils/format';
 
 /**
@@ -77,14 +77,16 @@ export async function captureShareCard(plot: PlotData | undefined, rank: number)
   // focus plot
   if (plot) {
     const coin = isCoinPlot(plot) ? plot : null;
-    const accent = coin ? '#3DFF9A' : '#E8C36A';
+    const accent = isLotPlot(plot) || coin ? '#3DFF9A' : '#E8C36A';
+    const tag = isLotPlot(plot) ? `#${plot.lotNumber}` : coin ? (coin.lease ? 'LEASED' : `#${rank}`) : 'AD';
     ctx.textAlign = 'left';
     ctx.fillStyle = accent;
     ctx.font = `700 26px ${font}`;
-    ctx.fillText(coin ? `#${rank}` : 'AD', 64, 1262);
+    ctx.fillText(tag, 64, 1262);
     ctx.fillStyle = '#F4F4F5';
     ctx.font = `650 34px ${font}`;
-    ctx.fillText(coin ? `${coin.name}  ${coin.ticker}` : isAdPlot(plot) ? plot.advertiser : '', coin ? 64 + ctx.measureText(`#${rank}`).width + 40 : 130, 1262);
+    const title = isLotPlot(plot) ? 'For lease · District' : coin ? `${coin.name}  ${coin.ticker}` : isAdPlot(plot) ? plot.advertiser : '';
+    ctx.fillText(title, 64 + ctx.measureText(tag).width + 40, 1262);
     if (coin) {
       ctx.textAlign = 'right';
       ctx.fillStyle = coin.rentStatus === 'PAID' ? '#3DFF9A' : '#FF6B6B';

@@ -4,7 +4,8 @@ import { Html } from '@react-three/drei';
 import { EffectComposer, Bloom, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
-import { PlotData, isCoinPlot } from '../types';
+import { PlotData, isCoinPlot, isLotPlot } from '../types';
+import { districtStart as findDistrictStart } from '../data/mockData';
 import { buildTowers, streetLength } from './layout';
 import { COLORS, FOG, TOWER_Z } from './constants';
 import { StreetController } from './StreetController';
@@ -60,7 +61,7 @@ function CrownLabels({ towers, focusIndex }: { towers: ReturnType<typeof buildTo
     <>
       {towers.map((t) => {
         const dist = Math.abs(t.index - focusIndex);
-        if (dist > 3) return null;
+        if (dist > 3 || isLotPlot(t.plot)) return null;
         const coin = isCoinPlot(t.plot) ? t.plot : null;
         const focused = dist === 0;
         return (
@@ -107,7 +108,7 @@ function Scene({ plots, controller, focusIndex, onTapPlot }: CityStageProps) {
       <CameraRig controller={controller} />
       <Ground streetLength={length} />
       <Backdrop streetLength={length} />
-      <Towers towers={towers} focusRef={focusRef} onMesh={onMesh} />
+      <Towers towers={towers} districtStart={findDistrictStart(plots)} focusRef={focusRef} onMesh={onMesh} />
       <CrownLabels towers={towers} focusIndex={focusIndex} />
       <TapPicker controller={controller} meshRef={meshRef} mapRef={mapRef} onTapPlot={onTapPlot} />
       <EffectComposer multisampling={0}>

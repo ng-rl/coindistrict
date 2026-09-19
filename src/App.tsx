@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PlotData, isCoinPlot } from './types';
-import { buildStreet } from './data/mockData';
+import { PlotData, isCoinPlot, isLotPlot } from './types';
+import { buildStreet, districtStart as findDistrictStart, downtownRank, zoneOf } from './data/mockData';
+import { LeaseRequest, loadLeaseRequests } from './data/ledger';
+import { MyPlotsPanel } from './components/MyPlotsPanel';
+import { RentPanel } from './components/RentPanel';
 import { useMarketData } from './data/market';
 import { PhoneStage } from './components/PhoneStage';
 import { Header } from './components/Header';
@@ -24,7 +27,9 @@ function App() {
   const [focusIndex, setFocusIndex] = useState(0);
   const [hintVisible, setHintVisible] = useState(true);
   const market = useMarketData();
-  const streetData = useMemo(() => buildStreet(market.coins), [market.coins]);
+  const streetData = useMemo(() => buildStreet(market.coins, market.tenants), [market.coins, market.tenants]);
+  const districtStart = useMemo(() => findDistrictStart(streetData), [streetData]);
+  const [leaseRequests, setLeaseRequests] = useState<LeaseRequest[]>(() => loadLeaseRequests());
   const controller = useRef(new StreetController()).current;
 
   useEffect(() => {
@@ -43,13 +48,11 @@ function App() {
 
   const railHeights = useMemo(() => {
     const h = heightsForStreet(streetData);
-    return streetData.map((p) => (isCoinPlot(p) ? ((h.get(p.id) ?? H_MIN) - H_MIN) / (H_MAX - H_MIN) : 0.35));
+    return streetData.map((p) => (isCoinPlot(p) ? ((h.get(p.id) ?? H_MIN) - H_MIN) / (H_MAX - H_MIN) : isLotPlot(p) ? 0 : 0.35));
   }, [streetData]);
 
-  const coinRank = useCallback(
-    (index: number) => streetData.slice(0, index + 1).filter(isCoinPlot).length,
-    [streetData]
-  );
+  const coinRank = useCallback((index: number) => downtownRank(streetData, index), [streetData]);
+  const firstLot = useMemo(() => streetData.findIndex(isLotPlot), [streetData]);
 
   const handleTapPlot = useCallback(
     (index: number) => {
@@ -61,7 +64,7 @@ function App() {
 
   const handleShare = async () => {
     try {
-      await captureShareCard(streetData[focusIndex], coinRank(focusIndex));
+      await captureShareCard(streetData[focusIndex], coinRank(focusIndex) ?? 0);
     } catch (error) {
       console.error('Failed to capture share card:', error);
     }
@@ -78,7 +81,7 @@ function App() {
       <div className="hud-top absolute left-0 right-0 top-0 z-10 pointer-events-none">
         <div className="pointer-events-auto">
           <Header onSearchClick={() => controller.goTo(0)} onShareClick={handleShare} />
-          <LegendBar source={market.source} updatedAt={market.updatedAt} />
+          <LegendBar source={market.source} updatedAt={market.updatedAt} zone={zoneOf(streetData, focusIndex)} />
         </div>
       </div>
 
@@ -94,7 +97,7 @@ function App() {
               count={streetData.length}
               onOpen={() => setSelectedPlot(focusPlot ?? null)}
             />
-            <RankRail plots={streetData} heights={railHeights} focusIndex={focusIndex} onJump={(i) => controller.goTo(i, 600)} />
+            <RankRail plots={streetData} heights={railHeights} focusIndex={focusIndex} districtStart={districtStart} onJump={(i) => controller.goTo(i, 600)} />
           </div>
         )}
         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -102,17 +105,34 @@ function App() {
 
       {activeTab !== 'street' && (
         <div
-          className="absolute inset-x-0 top-0 bottom-[52px] z-[9] flex items-center justify-center"
-          style={{ background: 'rgba(11,11,12,0.7)', backdropFilter: 'blur(8px)' }}
+          className="absolute inset-x-0 z-[9] overflow-hidden"
+          style={{ top: 92, bottom: 'calc(48px + env(safe-area-inset-bottom, 0px))', background: 'rgba(11,11,12,0.82)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
         >
-          <div className="text-center p-8">
-            <p className="text-cd-text text-lg font-semibold">{activeTab === 'myPlots' ? 'My plots' : 'Rent'}</p>
-            <p className="text-cd-muted text-sm mt-2">Coming soon · the street is the product</p>
-          </div>
+          {activeTab === 'myPlots' ? (
+            <MyPlotsPanel
+              requests={leaseRequests}
+              onFindLot={() => {
+                setActiveTab('street');
+                if (firstLot >= 0) controller.goTo(firstLot, 900);
+              }}
+            />
+          ) : (
+            <RentPanel
+              plots={streetData}
+              onJump={(i) => {
+                setActiveTab('street');
+                controller.goTo(i, 700);
+              }}
+            />
+          )}
         </div>
       )}
 
-      <PlotSheet plot={sheetPlot} onClose={() => setSelectedPlot(null)} />
+      <PlotSheet
+        plot={sheetPlot}
+        onClose={() => setSelectedPlot(null)}
+        onLeaseRequested={(req) => setLeaseRequests((all) => [req, ...all.filter((r) => r.id !== req.id)])}
+      />
     </PhoneStage>
   );
 }

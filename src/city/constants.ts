@@ -10,6 +10,8 @@ export const H_MIN = 3.4;
 export const H_MAX = 13.5;
 /** Ad plots: height decoupled from mcap/volume (rate-card height). */
 export const AD_HEIGHT = 5.6;
+/** Empty for-lease lot: a low slab with a sign. */
+export const LOT_HEIGHT = 0.22;
 
 /** Depth layout along Z. Towers stand on z = 0, camera looks from +Z. */
 export const TOWER_Z = 0;
