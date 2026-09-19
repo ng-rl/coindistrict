@@ -41,13 +41,13 @@ function App() {
       <Header onSearchClick={() => console.log('Search clicked')} onShareClick={handleShare} />
       <LegendBar />
       
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {activeTab === 'street' && (
           <StreetScroller plots={streetData} onPlotClick={handlePlotClick} />
         )}
         
         {activeTab === 'myPlots' && (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex-1 min-h-0 flex items-center justify-center">
             <div className="text-center p-8">
               <p className="text-cd-muted text-lg">My Plots</p>
               <p className="text-cd-muted text-sm mt-2">Coming soon</p>
@@ -56,7 +56,7 @@ function App() {
         )}
         
         {activeTab === 'rent' && (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex-1 min-h-0 flex items-center justify-center">
             <div className="text-center p-8">
               <p className="text-cd-muted text-lg">Rent Management</p>
               <p className="text-cd-muted text-sm mt-2">Coming soon</p>
