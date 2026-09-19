@@ -31,6 +31,7 @@ export function PriceChart({ coin }: PriceChartProps) {
   const [day, setDay] = useState<PricePoint[] | null>(null);
   const [dayError, setDayError] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
+  const [retry, setRetry] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -39,11 +40,16 @@ export function PriceChart({ coin }: PriceChartProps) {
     setDayError(false);
     fetchPriceChart(coin.id, 1)
       .then((p) => alive && setDay(p))
-      .catch(() => alive && setDayError(true));
+      .catch(() => {
+        // free-tier rate limit is tight on this endpoint: fall back to the 7d sparkline we already have
+        if (!alive) return;
+        setDayError(true);
+        setRange('7D');
+      });
     return () => {
       alive = false;
     };
-  }, [coin.id]);
+  }, [coin.id, retry]);
 
   const week = useMemo<PricePoint[] | null>(() => {
     const s = coin.sparkline7d;
@@ -114,6 +120,7 @@ export function PriceChart({ coin }: PriceChartProps) {
               onClick={() => {
                 setRange(r);
                 setHover(null);
+                if (r === '24H' && dayError) setRetry((n) => n + 1);
               }}
               className="px-2 py-0.5 rounded-md text-[11px] font-semibold"
               style={{
@@ -167,7 +174,7 @@ export function PriceChart({ coin }: PriceChartProps) {
         )}
         {!geom && (
           <text x={W / 2} y={H / 2} fontSize="11" fill="#8B8B93" textAnchor="middle">
-            {loading ? 'Loading live chart…' : range === '24H' && dayError ? 'Live 24h chart unavailable · try 7D' : 'No price history'}
+            {loading ? 'Loading live chart…' : range === '24H' && dayError ? '24h chart rate-limited · tap 24H to retry' : 'No price history'}
           </text>
         )}
       </svg>
