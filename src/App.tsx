@@ -30,12 +30,7 @@ function App() {
   
   const handleShare = async () => {
     try {
-      const dataUrl = await captureShareCard(streetData, streetData[0]?.id);
-      
-      const link = document.createElement('a');
-      link.download = 'coindistrict-street.png';
-      link.href = dataUrl;
-      link.click();
+      await captureShareCard(streetData, streetData[0]?.id);
     } catch (error) {
       console.error('Failed to capture share card:', error);
     }

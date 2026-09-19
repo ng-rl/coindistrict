@@ -38,8 +38,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             className="building-face-front absolute inset-0 overflow-hidden"
             style={{
               transform: 'translateZ(22px)',
-              background: 'linear-gradient(180deg, rgba(212,181,116,0.08) 0%, rgba(212,181,116,0.04) 100%)',
-              border: '1px solid #D4B574',
+              background: 'linear-gradient(180deg, rgba(232,195,106,0.08) 0%, rgba(232,195,106,0.04) 100%)',
+              border: '1px solid rgba(232,195,106,0.35)',
               borderRadius: '2px',
             }}
           >
@@ -47,7 +47,7 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             <div
               className="absolute top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider"
               style={{
-                backgroundColor: '#D4B574',
+                backgroundColor: '#E8C36A',
                 color: '#1A1408',
                 letterSpacing: '0.08em',
               }}
@@ -70,7 +70,7 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
               className="absolute inset-0 opacity-20"
               style={{
                 backgroundImage: `
-                  repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(212,181,116,0.1) 10px, rgba(212,181,116,0.1) 20px)
+                  repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(232,195,106,0.1) 10px, rgba(232,195,106,0.1) 20px)
                 `,
               }}
             />
@@ -82,8 +82,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             style={{
               transform: 'rotateY(-90deg) translateZ(22px)',
               width: '44px',
-              background: 'rgba(212,181,116,0.15)',
-              border: '1px solid rgba(212,181,116,0.4)',
+              background: 'rgba(232,195,106,0.12)',
+              border: '1px solid rgba(232,195,106,0.3)',
             }}
           />
           
@@ -93,8 +93,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             style={{
               transform: 'rotateY(90deg) translateZ(66px)',
               width: '44px',
-              background: 'rgba(212,181,116,0.1)',
-              border: '1px solid rgba(212,181,116,0.3)',
+              background: 'rgba(232,195,106,0.08)',
+              border: '1px solid rgba(232,195,106,0.25)',
             }}
           />
           
@@ -106,8 +106,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
               width: '88px',
               height: '44px',
               top: '0',
-              background: 'rgba(212,181,116,0.2)',
-              border: '1px solid rgba(212,181,116,0.4)',
+              background: 'rgba(232,195,106,0.15)',
+              border: '1px solid rgba(232,195,106,0.3)',
             }}
           />
         </div>
