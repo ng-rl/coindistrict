@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PlotData, isCoinPlot } from '../types';
 import { StreetScene, STREET_PX_PER_WORLD, type StreetPlot } from '../district-building-kit';
 
@@ -7,11 +7,12 @@ interface StreetScrollerProps {
   onPlotClick: (plot: PlotData) => void;
 }
 
-const H_MIN = 2.0;
-const H_MAX = 5.5;
+const H_MIN = 1.4;
+const H_MAX = 3.8;
 const PLOT_WIDTH = 88;
 const PLOT_GAP = 14;
 const AD_WIDTH = 108;
+const PADDING_LEFT = 20;
 
 function computeBuildingHeight(
   volume24h: number,
@@ -31,10 +32,9 @@ function computeBuildingHeight(
 }
 
 export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
-  const streetRef = useRef<HTMLDivElement>(null);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollLeftPx, setScrollLeftPx] = useState(0);
   
-  const { streetPlots } = useMemo(() => {
+  const { streetPlots, totalStreetWidth } = useMemo(() => {
     const coinPlots = plots.filter(isCoinPlot);
     if (coinPlots.length === 0) return { 
       streetPlots: [] as StreetPlot[],
@@ -45,17 +45,18 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
     const minVol = Math.min(...volumes);
     const maxVol = Math.max(...volumes);
     
-    let accumulatedX = 0;
+    // Account for paddingLeft in plot.x calculation
+    let accumulatedX = PADDING_LEFT;
     const streetPlots: StreetPlot[] = plots.map((plot) => {
       const isAd = !isCoinPlot(plot);
       const width = isAd ? AD_WIDTH : PLOT_WIDTH;
       
-      // Center of this plot in DOM pixels
+      // Center of this plot in scroll-content coordinates (includes paddingLeft)
       const centerX = accumulatedX + width / 2;
       accumulatedX += width + PLOT_GAP;
       
       const height = isAd 
-        ? 1.8 
+        ? 1.6 
         : computeBuildingHeight(plot.volume24h, minVol, maxVol);
       
       return {
@@ -69,73 +70,54 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
       };
     });
     
-    // Total width = all plots + gaps between them
-    const totalWidth = plots.reduce((sum, plot) => {
+    // Total width = padding + all plots + gaps + padding
+    const totalWidth = PADDING_LEFT + plots.reduce((sum, plot) => {
       const isAd = !isCoinPlot(plot);
       return sum + (isAd ? AD_WIDTH : PLOT_WIDTH);
-    }, 0) + (plots.length - 1) * PLOT_GAP;
+    }, 0) + (plots.length - 1) * PLOT_GAP + PADDING_LEFT;
     
     return {
       streetPlots,
+      totalStreetWidth: totalWidth,
     };
   }, [plots]);
   
-  // Sync scroll position for camera offset
-  useEffect(() => {
-    const handleScroll = () => {
-      if (streetRef.current) {
-        setScrollLeft(streetRef.current.scrollLeft);
-      }
-    };
-    
-    const scrollEl = streetRef.current;
-    if (scrollEl) {
-      scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-      return () => scrollEl.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
-  
-  // Calculate visible mid-point for camera positioning
-  const scrollOffsetWorld = scrollLeft / STREET_PX_PER_WORLD;
-  
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-end relative">
-      {/* Viewport-sized FIXED StreetScene Canvas */}
+      {/* VIEWPORT-sized Canvas — NOT full-street-width */}
       <div 
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          height: '520px',
-          zIndex: 0,
+          height: '480px',
+          bottom: 0,
         }}
       >
         <StreetScene 
           plots={streetPlots}
-          camera={{
-            position: [scrollOffsetWorld + 0.6, 1.55, 6.5],
-            lookAt: [scrollOffsetWorld, 1.45, 0],
-          }}
+          scrollLeftPx={scrollLeftPx}
+          visibleRowHeight={480}
         />
       </div>
       
-      {/* Scrollable DOM badges/meta */}
+      {/* Scrollable DOM layer on top */}
       <div
-        ref={streetRef}
-        className="overflow-x-auto overflow-y-visible scrollbar-hide relative"
+        className="relative z-10 overflow-x-auto overflow-y-visible scrollbar-hide"
+        onScroll={(e) => setScrollLeftPx(e.currentTarget.scrollLeft)}
         style={{
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '20px',
-          paddingTop: '48px',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-          zIndex: 10,
+          paddingTop: '36px',
+          paddingBottom: '28px',
         }}
       >
         <div
           className="inline-flex items-end"
           style={{
-            minWidth: 'max-content',
+            width: `${totalStreetWidth}px`,
+            height: '480px',
             gap: `${PLOT_GAP}px`,
+            paddingLeft: `${PADDING_LEFT}px`,
+            paddingRight: `${PADDING_LEFT}px`,
           }}
         >
           {plots.map((plot) => {
@@ -146,16 +128,16 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
               <button
                 key={plot.id}
                 onClick={() => onPlotClick(plot)}
-                className="plot-wrapper relative cursor-pointer group"
+                className="plot-wrapper relative cursor-pointer group flex-shrink-0"
                 style={{ 
                   width: `${width}px`,
+                  height: '480px',
                   scrollSnapAlign: 'center',
                   scrollSnapStop: 'normal',
-                  minHeight: '480px',
                 }}
                 aria-label={isCoinPlot(plot) ? `${plot.name} plot` : `${plot.advertiser} advertisement`}
               >
-                {/* Ticker badge - more padding to prevent clip */}
+                {/* Ticker badge */}
                 <div
                   className={`ticker-badge absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-2 border-cd-bg rounded-full font-mono font-bold text-[11px] z-30 ${
                     isAd ? 'bg-cd-ad' : 'bg-cd-mint'
@@ -163,7 +145,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                   style={{
                     width: '36px',
                     height: '36px',
-                    top: '-24px',
+                    top: '-18px',
                     color: isAd ? '#1A1408' : '#0B0B0C',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
                   }}
@@ -171,13 +153,12 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                   {isAd ? 'AD' : isCoinPlot(plot) ? plot.ticker.slice(0, 3) : ''}
                 </div>
                 
-                {/* Meta BELOW towers - high z-index, strong contrast */}
+                {/* Meta - readable over WebGL */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-2 z-20"
+                  className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-3 z-20"
                   style={{
-                    background: 'linear-gradient(to top, rgba(11,11,12,0.98) 0%, rgba(11,11,12,0.92) 70%, rgba(11,11,12,0.7) 100%)',
-                    paddingTop: '40px',
-                    borderRadius: '0 0 4px 4px',
+                    background: 'linear-gradient(to top, rgba(11,11,12,0.96) 0%, rgba(11,11,12,0.88) 65%, rgba(11,11,12,0.6) 100%)',
+                    paddingTop: '36px',
                   }}
                 >
                   <div className={`text-xs font-bold truncate px-1 ${
@@ -185,31 +166,29 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                   }`}
                   style={{
                     textShadow: '0 2px 4px rgba(0,0,0,0.9)',
-                    letterSpacing: '-0.01em',
                   }}>
                     {isAd ? 'Sponsor' : isCoinPlot(plot) ? plot.name : ''}
                   </div>
                   <div 
-                    className="text-[11px] font-medium text-cd-muted"
+                    className="text-[10px] font-medium text-cd-muted"
                     style={{
                       textShadow: '0 1px 3px rgba(0,0,0,0.8)',
                     }}
                   >
                     {isAd ? 'Ad · Every 7' : isCoinPlot(plot) ? `$${(plot.marketCap / 1000000000).toFixed(1)}B` : ''}
                   </div>
-                  <div className="flex justify-center pt-1">
+                  <div className="flex justify-center pt-0.5">
                     <div
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
+                      className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider ${
                         isAd 
-                          ? 'bg-cd-ad/20 text-cd-ad border border-cd-ad/50'
+                          ? 'bg-cd-ad/15 text-cd-ad border border-cd-ad/40'
                           : isCoinPlot(plot) && plot.rentStatus === 'PAID'
-                            ? 'bg-cd-mint/20 text-cd-mint border border-cd-mint/50'
-                            : 'bg-cd-due/20 text-cd-due border border-cd-due/50'
+                            ? 'bg-cd-mint/15 text-cd-mint border border-cd-mint/40'
+                            : 'bg-cd-due/15 text-cd-due border border-cd-due/40'
                       }`}
                       style={{
-                        backdropFilter: 'blur(6px)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                        letterSpacing: '0.05em',
+                        backdropFilter: 'blur(4px)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
                       }}
                     >
                       {isAd ? 'AD' : isCoinPlot(plot) ? plot.rentStatus : 'PAID'}
