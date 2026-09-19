@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { PlotData, isCoinPlot } from '../types';
-import { StreetScene, type StreetPlot } from '../district-building-kit';
+import { StreetScene, STREET_PX_PER_WORLD, type StreetPlot } from '../district-building-kit';
 
 interface StreetScrollerProps {
   plots: PlotData[];
@@ -12,9 +12,6 @@ const H_MAX = 3.8;
 const PLOT_WIDTH = 88;
 const PLOT_GAP = 14;
 const AD_WIDTH = 108;
-
-// TJ fix: use 88 (plot width) not 30 for proper tower proportions with AutoFrame
-const HOST_PX_PER_WORLD = 88;
 
 function computeBuildingHeight(
   volume24h: number,
@@ -67,7 +64,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
         isAd,
         seed: isCoinPlot(plot) ? plot.ticker : 'AD',
         ticker: undefined, // DOM HUD outside Canvas
-        x: centerX / HOST_PX_PER_WORLD, // 88 not 30 for proper tower proportions
+        x: centerX / STREET_PX_PER_WORLD, // Kit slab-fix: 88 for proper tower proportions
       };
     });
     

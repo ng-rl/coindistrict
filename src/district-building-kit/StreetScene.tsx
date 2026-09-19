@@ -10,10 +10,10 @@ import { COLORS } from './materials'
 
 /**
  * Recommended host scale: world X = centerDomPx / STREET_PX_PER_WORLD.
- * Auto-frame then sets ortho zoom so the full plot span fits the canvas width.
- * Any consistent world units work — this constant documents the Cody convention.
+ * Match ~88px DOM plot width so a ~1wu-wide building fills one plot under auto-frame
+ * (zoom = size.width / worldW → 1 world unit ≈ STREET_PX_PER_WORLD canvas px).
  */
-export const STREET_PX_PER_WORLD = 30
+export const STREET_PX_PER_WORLD = 88
 
 export interface StreetPlot {
   id: string
@@ -89,8 +89,9 @@ function AutoFrame({
     const worldW = Math.max(4, maxX - minX + 2.4)
 
     const autoZoom = size.width > 0 ? size.width / worldW : 95
-    const autoPos: [number, number, number] = [midX + 2.2, 2.2, 5]
-    const autoLookAt: [number, number, number] = [midX, 1.1, 0]
+    // Street elevation (not roof view) — slight side offset, eye height, pull back
+    const autoPos: [number, number, number] = [midX + 0.6, 1.55, 6.5]
+    const autoLookAt: [number, number, number] = [midX, 1.45, 0]
 
     const zoom = overrideZoom ?? autoZoom
     const pos = overridePos ?? autoPos
