@@ -13,7 +13,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
   ];
   
   return (
-    <nav className="flex border-t border-cd-line bg-cd-bg">
+    <nav className="shrink-0 flex border-t border-cd-line bg-cd-bg">
       {tabs.map((tab) => (
         <button
           key={tab.id}

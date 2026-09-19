@@ -12,10 +12,10 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   const streetRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="flex-1 overflow-hidden relative">
+    <div className="flex-1 min-h-0 flex flex-col justify-end relative">
       <div
         ref={streetRef}
-        className="h-full overflow-x-auto overflow-y-hidden scrollbar-hide"
+        className="overflow-x-auto overflow-y-hidden scrollbar-hide"
         style={{
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
@@ -25,7 +25,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
         }}
       >
         <div
-          className="inline-flex items-end h-full"
+          className="inline-flex items-end"
           style={{
             minWidth: 'max-content',
             gap: '14px',
