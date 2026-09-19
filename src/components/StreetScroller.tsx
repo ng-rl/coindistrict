@@ -84,12 +84,13 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-end relative">
-      {/* VIEWPORT-sized Canvas — NOT full-street-width */}
+      {/* VIEWPORT-sized Canvas — anchored to street row, NOT inset-0 */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute left-0 right-0 pointer-events-none"
         style={{
-          height: '480px',
-          bottom: 0,
+          bottom: 28, // match paddingBottom
+          height: 480,
+          top: 'auto', // prevent inset-0 stretch on tall phones
         }}
       >
         <StreetScene 
