@@ -30,7 +30,7 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
           style={{
             height: `${height}px`,
             transformStyle: 'preserve-3d',
-            transform: 'rotateY(8deg)',
+            transform: 'rotateY(-15deg)',
           }}
         >
           {/* Front face */}
@@ -38,8 +38,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             className="building-face-front absolute inset-0 overflow-hidden"
             style={{
               transform: 'translateZ(22px)',
-              background: 'linear-gradient(180deg, rgba(212,181,116,0.22) 0%, rgba(212,181,116,0.10) 100%)',
-              border: '2px solid #D4B574',
+              background: 'linear-gradient(180deg, rgba(212,181,116,0.08) 0%, rgba(212,181,116,0.04) 100%)',
+              border: '1px solid #D4B574',
               borderRadius: '2px',
             }}
           >

@@ -36,7 +36,7 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           style={{
             height: `${height}px`,
             transformStyle: 'preserve-3d',
-            transform: 'rotateY(8deg)',
+            transform: 'rotateY(-15deg)',
             filter: !isPaid ? 'brightness(0.55) saturate(0.7)' : 'none',
           }}
         >
