@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { PlotData, isCoinPlot } from '../types';
-import { StreetScene, STREET_PX_PER_WORLD, type StreetPlot } from '../district-building-kit';
+import { StreetScene, type StreetPlot } from '../district-building-kit';
 
 interface StreetScrollerProps {
   plots: PlotData[];
@@ -12,6 +12,9 @@ const H_MAX = 3.8;
 const PLOT_WIDTH = 88;
 const PLOT_GAP = 14;
 const AD_WIDTH = 108;
+
+// TJ fix: use 88 (plot width) not 30 for proper tower proportions with AutoFrame
+const HOST_PX_PER_WORLD = 88;
 
 function computeBuildingHeight(
   volume24h: number,
@@ -64,7 +67,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
         isAd,
         seed: isCoinPlot(plot) ? plot.ticker : 'AD',
         ticker: undefined, // DOM HUD outside Canvas
-        x: centerX / STREET_PX_PER_WORLD, // Kit AutoFrame handles zoom
+        x: centerX / HOST_PX_PER_WORLD, // 88 not 30 for proper tower proportions
       };
     });
     
@@ -90,7 +93,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '28px',
-          paddingTop: '20px',
+          paddingTop: '36px',
           paddingLeft: '20px',
           paddingRight: '20px',
         }}
@@ -100,7 +103,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
           className="relative"
           style={{
             minWidth: 'max-content',
-            height: '420px',
+            height: '480px',
           }}
         >
           {/* StreetScene Canvas layer - scrolls with content */}
@@ -108,7 +111,7 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
             className="absolute inset-0 pointer-events-none"
             style={{
               width: `${totalStreetWidth}px`,
-              height: '420px',
+              height: '480px',
             }}
           >
             <StreetScene plots={streetPlots} />
@@ -134,11 +137,11 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                     width: `${width}px`,
                     scrollSnapAlign: 'center',
                     scrollSnapStop: 'normal',
-                    minHeight: '420px',
+                    minHeight: '480px',
                   }}
                   aria-label={isCoinPlot(plot) ? `${plot.name} plot` : `${plot.advertiser} advertisement`}
                 >
-                  {/* Ticker badge */}
+                  {/* Ticker badge - ensure not clipped */}
                   <div
                     className={`ticker-badge absolute left-1/2 -translate-x-1/2 flex items-center justify-center border-2 border-cd-bg rounded-full font-mono font-bold text-[11px] z-20 ${
                       isAd ? 'bg-cd-ad' : 'bg-cd-mint'
@@ -148,30 +151,49 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                       height: '36px',
                       top: '-18px',
                       color: isAd ? '#1A1408' : '#0B0B0C',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
                     }}
                   >
                     {isAd ? 'AD' : isCoinPlot(plot) ? plot.ticker.slice(0, 3) : ''}
                   </div>
                   
-                  {/* Meta */}
-                  <div className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-3">
+                  {/* Meta - readable over WebGL with contrast */}
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 text-center space-y-1 pb-3 z-10"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(11,11,12,0.95) 0%, rgba(11,11,12,0.85) 60%, transparent 100%)',
+                      paddingTop: '32px',
+                    }}
+                  >
                     <div className={`text-xs font-medium truncate px-1 ${
                       isAd ? 'text-cd-ad' : 'text-cd-text'
-                    }`}>
+                    }`}
+                    style={{
+                      textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                    }}>
                       {isAd ? 'Sponsor' : isCoinPlot(plot) ? plot.name : ''}
                     </div>
-                    <div className="text-[10px] text-cd-muted">
+                    <div 
+                      className="text-[10px] text-cd-muted"
+                      style={{
+                        textShadow: '0 1px 2px rgba(0,0,0,0.7)',
+                      }}
+                    >
                       {isAd ? 'Ad · Every 7' : isCoinPlot(plot) ? `$${(plot.marketCap / 1000000000).toFixed(1)}B` : ''}
                     </div>
                     <div className="flex justify-center">
                       <div
                         className={`px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider ${
                           isAd 
-                            ? 'bg-cd-ad/10 text-cd-ad border border-cd-ad/30'
+                            ? 'bg-cd-ad/15 text-cd-ad border border-cd-ad/40'
                             : isCoinPlot(plot) && plot.rentStatus === 'PAID'
-                              ? 'bg-cd-mint/10 text-cd-mint border border-cd-mint/30'
-                              : 'bg-cd-due/10 text-cd-due border border-cd-due/30'
+                              ? 'bg-cd-mint/15 text-cd-mint border border-cd-mint/40'
+                              : 'bg-cd-due/15 text-cd-due border border-cd-due/40'
                         }`}
+                        style={{
+                          backdropFilter: 'blur(4px)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                        }}
                       >
                         {isAd ? 'AD' : isCoinPlot(plot) ? plot.rentStatus : 'PAID'}
                       </div>
