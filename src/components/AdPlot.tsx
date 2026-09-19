@@ -30,6 +30,7 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
           style={{
             height: `${height}px`,
             transformStyle: 'preserve-3d',
+            transform: 'rotateY(-15deg)',
           }}
         >
           {/* Front face */}
@@ -37,8 +38,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             className="building-face-front absolute inset-0 overflow-hidden"
             style={{
               transform: 'translateZ(22px)',
-              background: 'linear-gradient(180deg, rgba(232,195,106,0.25) 0%, rgba(232,195,106,0.12) 100%)',
-              border: '2px solid #E8C36A',
+              background: 'linear-gradient(180deg, rgba(232,195,106,0.08) 0%, rgba(232,195,106,0.04) 100%)',
+              border: '1px solid rgba(232,195,106,0.35)',
               borderRadius: '2px',
             }}
           >
@@ -81,8 +82,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             style={{
               transform: 'rotateY(-90deg) translateZ(22px)',
               width: '44px',
-              background: 'rgba(232,195,106,0.15)',
-              border: '1px solid rgba(232,195,106,0.4)',
+              background: 'rgba(232,195,106,0.12)',
+              border: '1px solid rgba(232,195,106,0.3)',
             }}
           />
           
@@ -92,8 +93,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
             style={{
               transform: 'rotateY(90deg) translateZ(66px)',
               width: '44px',
-              background: 'rgba(232,195,106,0.1)',
-              border: '1px solid rgba(232,195,106,0.3)',
+              background: 'rgba(232,195,106,0.08)',
+              border: '1px solid rgba(232,195,106,0.25)',
             }}
           />
           
@@ -105,8 +106,8 @@ export function AdPlot({ ad, onClick }: AdPlotProps) {
               width: '88px',
               height: '44px',
               top: '0',
-              background: 'rgba(232,195,106,0.2)',
-              border: '1px solid rgba(232,195,106,0.4)',
+              background: 'rgba(232,195,106,0.15)',
+              border: '1px solid rgba(232,195,106,0.3)',
             }}
           />
         </div>

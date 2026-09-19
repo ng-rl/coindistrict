@@ -1,4 +1,8 @@
+import { createRoot } from 'react-dom/client';
+import html2canvas from 'html2canvas';
 import { PlotData, isCoinPlot } from '../types';
+import { Building } from './Building';
+import { AdPlot } from './AdPlot';
 
 interface ShareCardProps {
   plots: PlotData[];
@@ -14,7 +18,6 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
   const visiblePlots = plots.slice(startIndex, startIndex + 5);
   
   const coinPlots = visiblePlots.filter(isCoinPlot);
-  const tickers = coinPlots.map(p => p.ticker).join(' · ');
   
   return (
     <div
@@ -52,13 +55,30 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
         </div>
       </div>
       
-      {/* Street viewport placeholder */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-cd-muted text-center">
-          <div className="text-lg mb-2">Street View Capture</div>
-          <div className="text-sm opacity-60">
-            {visiblePlots.length} plots · {tickers}
-          </div>
+      {/* Street viewport with real buildings */}
+      <div className="flex-1 flex items-center justify-center overflow-hidden px-8">
+        <div 
+          className="inline-flex items-end gap-3"
+          style={{
+            transform: 'scale(0.85)',
+          }}
+        >
+          {visiblePlots.map((plot, index) => (
+            <div key={plot.id} style={{ width: '108px' }}>
+              {isCoinPlot(plot) ? (
+                <Building
+                  coin={plot}
+                  index={index}
+                  onClick={() => {}}
+                />
+              ) : (
+                <AdPlot
+                  ad={plot}
+                  onClick={() => {}}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
       
@@ -74,11 +94,9 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
         {coinPlots.slice(0, 5).map((plot) => (
           <span
             key={plot.id}
-            className="px-2 py-1 rounded-full text-xs font-mono font-semibold"
+            className="text-xs font-mono font-semibold"
             style={{
-              backgroundColor: 'var(--cd-mint-dim)',
               color: 'var(--cd-mint)',
-              border: '1px solid rgba(61,255,154,0.3)',
             }}
           >
             {plot.ticker}
@@ -96,22 +114,57 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
   );
 }
 
-export function captureShareCard(_plots: PlotData[], _focusPlotId?: string): string {
+export async function captureShareCard(plots: PlotData[], focusPlotId?: string): Promise<void> {
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.pointerEvents = 'none';
   document.body.appendChild(container);
   
-  const captureNote = `[ShareCard capture system stub]
-
-To implement full capture:
-1. Render ShareCard with visible plots
-2. Use html2canvas or similar to capture the element
-3. Return base64 PNG or trigger download/share
-
-Current: Returns path for future implementation`;
+  const root = createRoot(container);
   
-  document.body.removeChild(container);
-  
-  return captureNote;
+  try {
+    root.render(
+      <ShareCard plots={plots} focusPlotId={focusPlotId} />
+    );
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const shareCardElement = container.querySelector('.share-card') as HTMLElement;
+    if (!shareCardElement) {
+      throw new Error('ShareCard element not found');
+    }
+    
+    const canvas = await html2canvas(shareCardElement, {
+      backgroundColor: '#0B0B0C',
+      scale: 2,
+      logging: false,
+      useCORS: true,
+    });
+    
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error('Failed to create image blob');
+      }
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = 'coindistrict-street.png';
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      root.unmount();
+      document.body.removeChild(container);
+    }, 'image/png');
+  } catch (error) {
+    console.error('Share capture failed:', error);
+    root.unmount();
+    document.body.removeChild(container);
+    alert('Failed to capture street view. Please try again.');
+    throw error;
+  }
 }
