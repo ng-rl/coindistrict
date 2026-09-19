@@ -13,7 +13,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
   ];
   
   return (
-    <nav className="flex border-b border-cd-line bg-cd-bg">
+    <nav className="flex border-t border-cd-line bg-cd-bg">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -27,7 +27,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
           {tab.label}
           {activeTab === tab.id && (
             <div 
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-cd-mint"
+              className="absolute top-0 left-0 right-0 h-0.5 bg-cd-mint"
             />
           )}
         </button>

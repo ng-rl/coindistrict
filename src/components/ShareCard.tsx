@@ -1,3 +1,4 @@
+import html2canvas from 'html2canvas';
 import { PlotData, isCoinPlot } from '../types';
 
 interface ShareCardProps {
@@ -96,22 +97,46 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
   );
 }
 
-export function captureShareCard(_plots: PlotData[], _focusPlotId?: string): string {
-  const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  document.body.appendChild(container);
-  
-  const captureNote = `[ShareCard capture system stub]
-
-To implement full capture:
-1. Render ShareCard with visible plots
-2. Use html2canvas or similar to capture the element
-3. Return base64 PNG or trigger download/share
-
-Current: Returns path for future implementation`;
-  
-  document.body.removeChild(container);
-  
-  return captureNote;
+export async function captureShareCard(plots: PlotData[], focusPlotId?: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    document.body.appendChild(container);
+    
+    const root = document.createElement('div');
+    container.appendChild(root);
+    
+    import('react-dom/client').then(({ createRoot }) => {
+      const reactRoot = createRoot(root);
+      reactRoot.render(
+        <ShareCard plots={plots} focusPlotId={focusPlotId} />
+      );
+      
+      setTimeout(() => {
+        const shareCardElement = root.querySelector('.share-card') as HTMLElement;
+        if (!shareCardElement) {
+          document.body.removeChild(container);
+          reject(new Error('ShareCard element not found'));
+          return;
+        }
+        
+        html2canvas(shareCardElement, {
+          backgroundColor: '#0B0B0C',
+          scale: 2,
+          logging: false,
+        }).then((canvas) => {
+          const dataUrl = canvas.toDataURL('image/png');
+          reactRoot.unmount();
+          document.body.removeChild(container);
+          resolve(dataUrl);
+        }).catch((error) => {
+          reactRoot.unmount();
+          document.body.removeChild(container);
+          reject(error);
+        });
+      }, 300);
+    }).catch(reject);
+  });
 }

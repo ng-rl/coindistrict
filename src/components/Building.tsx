@@ -36,6 +36,7 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           style={{
             height: `${height}px`,
             transformStyle: 'preserve-3d',
+            transform: 'rotateY(8deg)',
             filter: !isPaid ? 'brightness(0.55) saturate(0.7)' : 'none',
           }}
         >
@@ -51,13 +52,17 @@ export function Building({ coin, index, onClick }: BuildingProps) {
           >
             {/* Window grid */}
             <div
-              className="window-grid absolute inset-0"
+              className={`window-grid absolute inset-0 ${isPaid ? 'window-pulse' : ''}`}
               style={{
                 backgroundImage: `
                   repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(61,255,154,0.12) 18px, rgba(61,255,154,0.12) 19px),
                   repeating-linear-gradient(90deg, transparent, transparent 16px, rgba(61,255,154,0.12) 16px, rgba(61,255,154,0.12) 17px)
                 `,
                 opacity: isPaid ? 0.6 : 0.25,
+                ...(isPaid && {
+                  animation: 'windowPulse 2.4s ease-in-out infinite',
+                  animationDelay,
+                }),
               }}
             />
             

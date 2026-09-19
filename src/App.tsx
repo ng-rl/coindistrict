@@ -7,6 +7,7 @@ import { LegendBar } from './components/LegendBar';
 import { TabBar } from './components/TabBar';
 import { StreetScroller } from './components/StreetScroller';
 import { PlotSheet } from './components/PlotSheet';
+import { captureShareCard } from './components/ShareCard';
 
 type Tab = 'street' | 'myPlots' | 'rent';
 
@@ -27,11 +28,23 @@ function App() {
     setSelectedPlot(null);
   };
   
+  const handleShare = async () => {
+    try {
+      const dataUrl = await captureShareCard(streetData, streetData[0]?.id);
+      
+      const link = document.createElement('a');
+      link.download = 'coindistrict-street.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('Failed to capture share card:', error);
+    }
+  };
+  
   return (
     <PhoneStage>
-      <Header onSearchClick={() => console.log('Search clicked')} />
+      <Header onSearchClick={() => console.log('Search clicked')} onShareClick={handleShare} />
       <LegendBar />
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       
       <main className="flex-1 overflow-hidden">
         {activeTab === 'street' && (
@@ -56,6 +69,8 @@ function App() {
           </div>
         )}
       </main>
+      
+      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       
       <PlotSheet plot={selectedPlot} onClose={handleCloseSheet} />
     </PhoneStage>
