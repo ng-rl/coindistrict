@@ -1,12 +1,35 @@
 import { createRoot } from 'react-dom/client';
 import html2canvas from 'html2canvas';
 import { PlotData, isCoinPlot } from '../types';
-import { Building } from './Building';
-import { AdPlot } from './AdPlot';
+import { StreetScene, type StreetPlot } from '../district-building-kit';
+import { useMemo } from 'react';
 
 interface ShareCardProps {
   plots: PlotData[];
   focusPlotId?: string;
+}
+
+const H_MIN = 1.4;
+const H_MAX = 3.8;
+const PLOT_WIDTH = 88;
+const PLOT_GAP = 14;
+const AD_WIDTH = 108;
+
+function computeBuildingHeight(
+  volume24h: number,
+  streetMinVolume: number,
+  streetMaxVolume: number,
+): number {
+  const epsilon = 1;
+  const rawLog = Math.log10(volume24h + epsilon);
+  const minLog = Math.log10(streetMinVolume + epsilon);
+  const maxLog = Math.log10(streetMaxVolume + epsilon);
+  
+  const normalized = maxLog > minLog 
+    ? Math.max(0, Math.min(1, (rawLog - minLog) / (maxLog - minLog)))
+    : 0.5;
+  
+  return H_MIN + normalized * (H_MAX - H_MIN);
 }
 
 export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
@@ -19,6 +42,46 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
   
   const coinPlots = visiblePlots.filter(isCoinPlot);
   
+  const { streetPlots } = useMemo(() => {
+    const allCoinPlots = plots.filter(isCoinPlot);
+    if (allCoinPlots.length === 0) return { 
+      streetMinVolume: 1, 
+      streetMaxVolume: 1000000000,
+      streetPlots: [] as StreetPlot[],
+    };
+    
+    const volumes = allCoinPlots.map(c => c.volume24h);
+    const minVol = Math.min(...volumes);
+    const maxVol = Math.max(...volumes);
+    
+    let worldX = 0;
+    const streetPlots: StreetPlot[] = visiblePlots.map((plot) => {
+      const isAd = !isCoinPlot(plot);
+      const width = isAd ? AD_WIDTH : PLOT_WIDTH;
+      
+      const centerX = worldX + width / 2;
+      worldX += width + PLOT_GAP;
+      
+      const height = isAd 
+        ? 1.6 
+        : computeBuildingHeight(plot.volume24h, minVol, maxVol);
+      
+      return {
+        id: plot.id,
+        height,
+        status: isCoinPlot(plot) ? plot.rentStatus : 'PAID',
+        isAd,
+        seed: isCoinPlot(plot) ? plot.ticker : 'AD',
+        ticker: undefined,
+        x: (centerX - PLOT_WIDTH / 2) / 30,
+      };
+    });
+    
+    return {
+      streetPlots,
+    };
+  }, [plots, visiblePlots]);
+
   return (
     <div
       className="share-card bg-cd-bg p-6 flex flex-col"
@@ -55,30 +118,10 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
         </div>
       </div>
       
-      {/* Street viewport with real buildings */}
+      {/* Street viewport with WebGL buildings */}
       <div className="flex-1 flex items-center justify-center overflow-hidden px-8">
-        <div 
-          className="inline-flex items-end gap-3"
-          style={{
-            transform: 'scale(0.85)',
-          }}
-        >
-          {visiblePlots.map((plot, index) => (
-            <div key={plot.id} style={{ width: '108px' }}>
-              {isCoinPlot(plot) ? (
-                <Building
-                  coin={plot}
-                  index={index}
-                  onClick={() => {}}
-                />
-              ) : (
-                <AdPlot
-                  ad={plot}
-                  onClick={() => {}}
-                />
-              )}
-            </div>
-          ))}
+        <div style={{ width: '100%', height: '600px' }}>
+          <StreetScene plots={streetPlots} />
         </div>
       </div>
       
@@ -129,7 +172,7 @@ export async function captureShareCard(plots: PlotData[], focusPlotId?: string):
       <ShareCard plots={plots} focusPlotId={focusPlotId} />
     );
     
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     const shareCardElement = container.querySelector('.share-card') as HTMLElement;
     if (!shareCardElement) {
@@ -141,6 +184,7 @@ export async function captureShareCard(plots: PlotData[], focusPlotId?: string):
       scale: 2,
       logging: false,
       useCORS: true,
+      allowTaint: true,
     });
     
     canvas.toBlob((blob) => {
