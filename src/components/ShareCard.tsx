@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import { PlotData, isCoinPlot } from '../types';
 import { Building } from './Building';
 import { AdPlot } from './AdPlot';
+import { useMemo } from 'react';
 
 interface ShareCardProps {
   plots: PlotData[];
@@ -18,6 +19,17 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
   const visiblePlots = plots.slice(startIndex, startIndex + 5);
   
   const coinPlots = visiblePlots.filter(isCoinPlot);
+  
+  const { streetMinVolume, streetMaxVolume } = useMemo(() => {
+    const allCoinPlots = plots.filter(isCoinPlot);
+    if (allCoinPlots.length === 0) return { streetMinVolume: 1, streetMaxVolume: 1000000000 };
+    
+    const volumes = allCoinPlots.map(c => c.volume24h);
+    return {
+      streetMinVolume: Math.min(...volumes),
+      streetMaxVolume: Math.max(...volumes),
+    };
+  }, [plots]);
   
   return (
     <div
@@ -70,6 +82,8 @@ export function ShareCard({ plots, focusPlotId }: ShareCardProps) {
                   coin={plot}
                   index={index}
                   onClick={() => {}}
+                  streetMinVolume={streetMinVolume}
+                  streetMaxVolume={streetMaxVolume}
                 />
               ) : (
                 <AdPlot
@@ -141,6 +155,7 @@ export async function captureShareCard(plots: PlotData[], focusPlotId?: string):
       scale: 2,
       logging: false,
       useCORS: true,
+      allowTaint: true,
     });
     
     canvas.toBlob((blob) => {

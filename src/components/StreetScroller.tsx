@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { PlotData, isCoinPlot } from '../types';
 import { Building } from './Building';
 import { AdPlot } from './AdPlot';
@@ -10,6 +10,17 @@ interface StreetScrollerProps {
 
 export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
   const streetRef = useRef<HTMLDivElement>(null);
+  
+  const { streetMinVolume, streetMaxVolume } = useMemo(() => {
+    const coinPlots = plots.filter(isCoinPlot);
+    if (coinPlots.length === 0) return { streetMinVolume: 1, streetMaxVolume: 1000000000 };
+    
+    const volumes = coinPlots.map(c => c.volume24h);
+    return {
+      streetMinVolume: Math.min(...volumes),
+      streetMaxVolume: Math.max(...volumes),
+    };
+  }, [plots]);
   
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-end relative">
@@ -44,6 +55,8 @@ export function StreetScroller({ plots, onPlotClick }: StreetScrollerProps) {
                   coin={plot}
                   index={index}
                   onClick={() => onPlotClick(plot)}
+                  streetMinVolume={streetMinVolume}
+                  streetMaxVolume={streetMaxVolume}
                 />
               ) : (
                 <AdPlot
